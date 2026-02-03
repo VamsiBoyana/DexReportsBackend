@@ -17,13 +17,13 @@ if (env === "production") {
   dotenv.config({ path: ".env", override: true });
 }
 
-// Connect to database
+// Connect to database 
 connectDB();
 
 const app = express();
 
 // Set port based on environment
-const PORT = process.env.PORT || (env === "production" ? 5000 : 3000);
+const PORT = process.env.PORT || (env === "production" ? 8000 : 3000);
 
 // Get frontend URL from environment variable
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
