@@ -1880,11 +1880,18 @@ const getWallets = async (req, res) => {
   }
 };
 
+
 const getWalletReports = async (req, res) => {
   try {
-    const { walletAddress, startTime, page = 1, limit = 10 } = req.query;
+    const {
+      walletAddress,
+      startTime,
+      endTime,
+      page = 1,
+      limit = 10,
+    } = req.query;
 
-    // Convert and validate pagination inputs
+    // Pagination
     const pageNumber = parseInt(page);
     const limitNumber = parseInt(limit);
     const skip = (pageNumber - 1) * limitNumber;
@@ -1892,20 +1899,34 @@ const getWalletReports = async (req, res) => {
     if (isNaN(pageNumber) || pageNumber < 1) {
       return res.status(400).json({ message: "Invalid page number" });
     }
+
     if (isNaN(limitNumber) || limitNumber < 1) {
       return res.status(400).json({ message: "Invalid limit" });
     }
 
-    // Build filter
     const filter = {};
-    if (walletAddress) filter.walletAddress = walletAddress;
-    if (startTime) filter.startTime = Number(startTime);
 
-    // Count total reports
+    if (walletAddress) {
+      filter.walletAddress = walletAddress;
+    }
+
+    if (startTime && endTime) {
+      // Range query
+      filter.startTime = {
+        $gte: Number(startTime),
+        $lte: Number(endTime),
+      };
+    } else if (startTime) {
+      // Exact day match
+      filter.startTime = Number(startTime);
+    } else if (endTime) {
+      // Exact day match
+      filter.startTime = Number(endTime);
+    }
+
     const count = await WalletReport.countDocuments(filter);
     const totalPages = Math.max(1, Math.ceil(count / limitNumber));
 
-    // Fetch paginated reports
     const reports = await WalletReport.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
@@ -1923,16 +1944,18 @@ const getWalletReports = async (req, res) => {
       });
     }
 
-    // Dynamic message
-    let message;
-    if (walletAddress && startTime) {
-      message = `Reports for wallet ${walletAddress} (startTime: ${startTime}) fetched successfully.`;
-    } else if (walletAddress) {
-      message = `Reports for wallet ${walletAddress} fetched successfully.`;
+    let message = "Wallet reports fetched successfully.";
+
+    if (walletAddress && startTime && endTime) {
+      message = `Reports for wallet ${walletAddress} from ${startTime} to ${endTime} fetched successfully.`;
+    } else if (walletAddress && startTime) {
+      message = `Reports for wallet ${walletAddress} on ${startTime} fetched successfully.`;
+    } else if (startTime && endTime) {
+      message = `All wallet reports from ${startTime} to ${endTime} fetched successfully.`;
     } else if (startTime) {
-      message = `All wallet reports for startTime ${startTime} fetched successfully.`;
-    } else {
-      message = "All wallet reports fetched successfully.";
+      message = `All wallet reports for ${startTime} fetched successfully.`;
+    } else if (walletAddress) {
+      message = `All reports for wallet ${walletAddress} fetched successfully.`;
     }
 
     return res.status(200).json({
@@ -1951,6 +1974,80 @@ const getWalletReports = async (req, res) => {
     });
   }
 };
+
+
+// const getWalletReports = async (req, res) => {
+//   try {
+//     const { walletAddress, startTime, page = 1, limit = 10 } = req.query;
+
+//     // Convert and validate pagination inputs
+//     const pageNumber = parseInt(page);
+//     const limitNumber = parseInt(limit);
+//     const skip = (pageNumber - 1) * limitNumber;
+
+//     if (isNaN(pageNumber) || pageNumber < 1) {
+//       return res.status(400).json({ message: "Invalid page number" });
+//     }
+//     if (isNaN(limitNumber) || limitNumber < 1) {
+//       return res.status(400).json({ message: "Invalid limit" });
+//     }
+
+//     // Build filter
+//     const filter = {};
+//     if (walletAddress) filter.walletAddress = walletAddress;
+//     if (startTime) filter.startTime = Number(startTime);
+
+//     // Count total reports
+//     const count = await WalletReport.countDocuments(filter);
+//     const totalPages = Math.max(1, Math.ceil(count / limitNumber));
+
+//     // Fetch paginated reports
+//     const reports = await WalletReport.find(filter)
+//       .sort({ createdAt: -1 })
+//       .skip(skip)
+//       .limit(limitNumber)
+//       .lean();
+
+//     if (!reports.length) {
+//       return res.status(404).json({
+//         message: "No wallet reports found for the given filters.",
+//         count: 0,
+//         totalPages: 0,
+//         page: pageNumber,
+//         limit: limitNumber,
+//         data: [],
+//       });
+//     }
+
+//     // Dynamic message
+//     let message;
+//     if (walletAddress && startTime) {
+//       message = `Reports for wallet ${walletAddress} (startTime: ${startTime}) fetched successfully.`;
+//     } else if (walletAddress) {
+//       message = `Reports for wallet ${walletAddress} fetched successfully.`;
+//     } else if (startTime) {
+//       message = `All wallet reports for startTime ${startTime} fetched successfully.`;
+//     } else {
+//       message = "All wallet reports fetched successfully.";
+//     }
+
+//     return res.status(200).json({
+//       message,
+//       count,
+//       totalPages,
+//       page: pageNumber,
+//       limit: limitNumber,
+//       data: reports,
+//     });
+//   } catch (err) {
+//     console.error("Error fetching wallet reports:", err);
+//     return res.status(500).json({
+//       message: "An error occurred while processing your request.",
+//       error: err.message,
+//     });
+//   }
+// };
+
 
 // const getTokenReports = async (req, res) => {
 //   try {
@@ -2005,8 +2102,8 @@ const getWalletReports = async (req, res) => {
 
 
 const getTokenReports = async (req, res) => {
-   try {
-    const { tokenAddress, page = 1, limit = 10 } = req.query;
+   try {    
+    const { tokenAddress, startTime, endTime, page = 1, limit = 10 } = req.query;
 
     if (!tokenAddress) {
       return res.status(400).json({
@@ -2024,10 +2121,26 @@ const getTokenReports = async (req, res) => {
       });
     }
 
+    const matchFilter = { tokenAddress };
+
+    // If both start & end provided → range
+    if (startTime && endTime) {
+      matchFilter.startTime = {
+        $gte: Number(startTime),
+        $lte: Number(endTime),
+      };
+    }
+    
+    // If only startTime → single day
+    else if (startTime) {
+      matchFilter.startTime = Number(startTime);
+    }
+    
+
     const pipeline = [
       // 1️⃣ Match token
       {
-        $match: { tokenAddress },
+        $match: matchFilter,
       },
 
       // 2️⃣ Group by date (startTime)
@@ -2083,12 +2196,14 @@ const getTokenReports = async (req, res) => {
 
     const count = totalDates[0]?.count || 0;
     const totalPages = Math.ceil(count / limitNumber);
+    const totalDocumentsCount = await rwaPoolsReport.countDocuments(matchFilter);
 
     return res.status(200).json({
       message: "Datewise token reports fetched successfully",
       tokenAddress,
       page: pageNumber,
       limit: limitNumber,
+      totalDocumentsCount,
       totalDates: count,
       totalPages,
       data,
@@ -2101,6 +2216,7 @@ const getTokenReports = async (req, res) => {
     });
   }
 };
+
 
 // const getTokenReports = async (req, res) => {
 //   try {

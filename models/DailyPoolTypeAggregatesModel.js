@@ -73,7 +73,7 @@ const dailyPoolTypeAggregateSchema = new mongoose.Schema({
   poolRayCost: { type: Number, default: 0 },
   mmRayFee: { type: Number, default: 0 },
   poolRayFee: { type: Number, default: 0 },
-    clientRevenueCost:{type:Number ,default:0},
+  clientRevenueCost:{type:Number ,default:0},
   netCompanyCost:{type:Number ,default:0},
   
   // Time fields
