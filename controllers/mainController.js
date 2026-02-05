@@ -35,7 +35,7 @@ const {
 const CompanyPoolRevenue = require("../models/CompanyPoolRevenue");
 const CompoundRevenue = require("../models/CompoundRevenue");
 const LiquidityPool = require("../models/rwaPools");
-const reportPool=require("../models/reportpool")
+const reportPool = require("../models/reportpool")
 
 const { stat } = require("node:fs");
 const { settings } = require("../server");
@@ -86,32 +86,32 @@ exports.getLiveTokenData = async (req, res, next) => {
 
 exports.getLivePairsData = async (req, res, next) => {
   console.log("enters getLivePairsData");
- 
+
   const { chainId, pairId } = req.query;
   console.log("req.query", req.query);
- 
+
   if (!chainId || !pairId) {
     return res.status(400).json({
       status: "error",
       message: "Missing chainId or pairId",
     });
   }
- 
+
   try {
     const response = await axios.get(
       `https://api.dexscreener.com/latest/dex/pairs/${chainId}/${pairId}`
     );
- 
+
     if (response?.data) {
       console.log(
         "\nPair data from DexScreener Retrieved:",
         response.data
       );
     }
- 
+
     const setting = await Settings.findOne({ status: true });
     console.log("setting", setting);
- 
+
     return res.status(200).json({
       status: "success",
       message: "Pair data fetched successfully",
@@ -120,7 +120,7 @@ exports.getLivePairsData = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Error fetching pair data:", error);
- 
+
     return res.status(500).json({
       status: "error",
       message: "Failed to fetch pair data",
@@ -2979,7 +2979,7 @@ exports.getAllActivities = async (
 //     const agentsVolume = agentBuyVolume + agentSellVolume; //add feild from admin for 15
 //     const resetsVolume = resetBuyVolume + resetSellVolume;
 //     const totalVolume = agentsVolume + resetsVolume;
-    
+
 //     let gasFee = 0
 //     // Add null check for settings to prevent errors when no transactions
 //     if (settings) {
@@ -2989,7 +2989,7 @@ exports.getAllActivities = async (
 //         gasFee = (bundles * (settings.gasFeePercentage || 0)) + (resets * 0.000005);
 //       }
 //     }
-    
+
 //     const gasFeeInDollars = - (gasFee * solAverage);
 //     const liquidityPool = await LiquidityPool.findOne({ pairAddress: pairAddress });
 //     // const rayFee = settings ? (totalVolume * (settings.tierFeePercentage || 0)) : 0; //tier fee 0.25%
@@ -3318,58 +3318,58 @@ exports.getAllActivitiesDEFI = async (
     const token1 = firstTx?.routers?.token1 || tokenAddress;
     const token2 = firstTx?.routers?.token2 || solAddress;
 
-console.log("token1",token1,"token2",token2);
+    console.log("token1", token1, "token2", token2);
 
-const token =
-  tokenAddress === token1 ? token1 :
-  tokenAddress === token2 ? token2 :
-  null;
+    const token =
+      tokenAddress === token1 ? token1 :
+        tokenAddress === token2 ? token2 :
+          null;
 
-const address =
-  tokenAddress === token1 ? token2 :
-  tokenAddress === token2 ? token1 :
-  null;
+    const address =
+      tokenAddress === token1 ? token2 :
+        tokenAddress === token2 ? token1 :
+          null;
 
-  console.log("token", token, "address", address);
+    console.log("token", token, "address", address);
 
-  // Fetch token (tracked token) price for this day
-  const responseTokenPrice = await fetch(
-    `https://pro-api.solscan.io/v2.0/token/price?address=${token}&from_time=${startTime}&to_time=${startTime}`,
-    requestOptions
-  );
-  if (!responseTokenPrice.ok) {
-    throw new Error("Network response was not ok for token price");
-  }
-  const tokenPriceData = await responseTokenPrice.json();
-
-  // Fetch SOL price explicitly using solAddress param
-  const responseSolPrice = await fetch(
-    `https://pro-api.solscan.io/v2.0/token/price?address=${solAddress}&from_time=${startTime}&to_time=${startTime}`,
-    requestOptions
-  );
-  if (!responseSolPrice.ok) {
-    throw new Error("Network response was not ok for SOL price");
-  }
-  const solPriceData = await responseSolPrice.json();
-
-  // Optionally fetch the counter-asset (pair) price if we could detect it
-  let addressAverage = 0;
-  if (address) {
-    const responseAddressPrice = await fetch(
-      `https://pro-api.solscan.io/v2.0/token/price?address=${address}&from_time=${startTime}&to_time=${startTime}`,
+    // Fetch token (tracked token) price for this day
+    const responseTokenPrice = await fetch(
+      `https://pro-api.solscan.io/v2.0/token/price?address=${token}&from_time=${startTime}&to_time=${startTime}`,
       requestOptions
     );
-    if (!responseAddressPrice.ok) {
-      console.warn("Failed to fetch counter-asset price, defaulting to 0");
-    } else {
-      const addressPriceData = await responseAddressPrice.json();
-      addressAverage = addressPriceData?.data?.[0]?.price || 0;
+    if (!responseTokenPrice.ok) {
+      throw new Error("Network response was not ok for token price");
     }
-  }
+    const tokenPriceData = await responseTokenPrice.json();
 
-  // Add null checks to prevent errors when API returns empty data (allows saving even with no buys/sells)
-  const solAverage = solPriceData?.data?.[0]?.price || 0;
-  const tokenAverage = tokenPriceData?.data?.[0]?.price || 0;
+    // Fetch SOL price explicitly using solAddress param
+    const responseSolPrice = await fetch(
+      `https://pro-api.solscan.io/v2.0/token/price?address=${solAddress}&from_time=${startTime}&to_time=${startTime}`,
+      requestOptions
+    );
+    if (!responseSolPrice.ok) {
+      throw new Error("Network response was not ok for SOL price");
+    }
+    const solPriceData = await responseSolPrice.json();
+
+    // Optionally fetch the counter-asset (pair) price if we could detect it
+    let addressAverage = 0;
+    if (address) {
+      const responseAddressPrice = await fetch(
+        `https://pro-api.solscan.io/v2.0/token/price?address=${address}&from_time=${startTime}&to_time=${startTime}`,
+        requestOptions
+      );
+      if (!responseAddressPrice.ok) {
+        console.warn("Failed to fetch counter-asset price, defaulting to 0");
+      } else {
+        const addressPriceData = await responseAddressPrice.json();
+        addressAverage = addressPriceData?.data?.[0]?.price || 0;
+      }
+    }
+
+    // Add null checks to prevent errors when API returns empty data (allows saving even with no buys/sells)
+    const solAverage = solPriceData?.data?.[0]?.price || 0;
+    const tokenAverage = tokenPriceData?.data?.[0]?.price || 0;
 
     const resetBuys = Resets.filter((tx) => tx.routers.token2 === tokenAddress);
 
@@ -3396,7 +3396,7 @@ const address =
     const agentsVolume = agentBuyVolume + agentSellVolume; //add feild from admin for 15
     const resetsVolume = resetBuyVolume + resetSellVolume;
     const totalVolume = agentsVolume + resetsVolume;
-    
+
     let gasFee = 0
     // Add null check for settings to prevent errors when no transactions
     if (settings) {
@@ -3406,7 +3406,7 @@ const address =
         gasFee = (bundles * (settings.gasFeePercentage || 0)) + (resets * 0.000005);
       }
     }
-    
+
     const gasFeeInDollars = - (gasFee * solAverage);
     const liquidityPool = await LiquidityPool.findOne({ pairAddress: pairAddress });
     // const rayFee = settings ? (totalVolume * (settings.tierFeePercentage || 0)) : 0; //tier fee 0.25%
@@ -3414,9 +3414,9 @@ const address =
     const lpAdd = (totalVolume * (liquidityPool.lpPercentage || 0)) * settings.lpRewardPool; //lp rewards %
     const rayCost = (totalVolume * (liquidityPool.lpPercentage || 0)) * 0.16;
     const priceImpact = settings && solAverage > 0 && pooledSolAverage > 0
-    ? (totalVolume * ((settings.amount || 0) / solAverage) / pooledSolAverage)
-    : 0; //this is price Impact
-    const yeild = ((totalVolume * liquidityPool.lpPercentage)*settings.lpRewardPool);
+      ? (totalVolume * ((settings.amount || 0) / solAverage) / pooledSolAverage)
+      : 0; //this is price Impact
+    const yeild = ((totalVolume * liquidityPool.lpPercentage) * settings.lpRewardPool);
     const tip = settings ? (bundles * (settings.tipAmount || 0)) : 0; //tipAmount(dynamic from admin)
     const walletStartBalance = (lastReportWalletBalance && lastReportWalletBalance.walletEndBalance ? lastReportWalletBalance.walletEndBalance : 0) + innerTrasaction;
     const ExpectedCost = rayFee + gasFee + tip;//no need
@@ -3617,7 +3617,7 @@ const address =
 //     /* =====================================================
 //        4️⃣ DEXSCREENER LIQUIDITY
 //        ===================================================== */
-   
+
 //     const responsetoday = await fetch(
 //       `https://api.dexscreener.com/tokens/v1/${chainId}/${tokenAddress}`
 //     );
@@ -3747,7 +3747,7 @@ const address =
 //   null;
 
 //   console.log("token",token,"address",address);
-  
+
 
 //   const responseSolPrice = await fetch(
 //     `https://pro-api.solscan.io/v2.0/token/price?address=${solanaAddress}&from_time=${startTime}&to_time=${startTime}`,
@@ -3783,7 +3783,7 @@ const address =
 //     const tokenAverage = priceData?.data?.[0]?.price || 0;
 
 // console.log("totsltransactions",allData.length);
-    
+
 //     const buytxns = allData.filter((tx) => tx.routers.token2 === tokenAddress);
 //     const selltxns = allData.filter((tx) => tx.routers.token1 === tokenAddress);
 
@@ -3820,10 +3820,10 @@ const address =
 //             console.log("resets",resets);
 //     console.log("trxns",trxns);
 
-    
 
-        
-        
+
+
+
 
 //     // const agentBuyVolumeInSollllll = agentBuys.reduce((s, t) => s + (t.routers.amount1|| 0), 0);
 //     const agentBuyVolumeInSol = agentBuys.reduce((s, t) => s + (t.routers.amount1 / (10 ** t.routers.token1_decimals) || 0), 0)
@@ -3837,12 +3837,12 @@ const address =
 //     // const totalVolume = agentsVolume;
 
 //     console.log("Bundles",Bundles,"buys",buys,"sells",sells);
-    
+
 
 //     console.log("bundles",bundles,"agentBuyVolumeInSol",agentBuyVolumeInSol,"agentBuyVolume",agentBuyVolume,"agentSellVolumeInToken",agentSellVolumeInToken,"agentSellVolume",agentSellVolume);
-    
+
 //     console.log("agentsVolume",agentsVolume);
-    
+
 //     let gasFee = 0
 //     // Add null check for settings to prevent errors when no transactions
 //     // if (settings) {
@@ -3863,16 +3863,16 @@ const address =
 //     }
 //     console.log("settings.gasFeePercentage",settings.gasFeePercentage);
 
-    
-    
-    
-    
+
+
+
+
 //     const gasFeeInDollars = - (gasFee * solAverage);
 
 //     console.log("gasFee",gasFee,"gasFeeInDollars",gasFeeInDollars);
 
-    
-    
+
+
 //     const liquidityPool = await LiquidityPool.findOne({ pairAddress: pairAddress });
 //     // const rayFee = settings ? (totalVolume * (settings.tierFeePercentage || 0)) : 0; //tier fee 0.25%
 //     const rayFee = - (totalVolume * (liquidityPool.lpPercentage || 0)); //tier fee %
@@ -3918,10 +3918,10 @@ const address =
 
 //     // console.log("liquidityPool",liquidityPool,"gasFeeInDollars",gasFeeInDollars,"gasFee",gasFee,"liquidityPool.lpPercentage",liquidityPool.lpPercentage);
 
-    
-    
-    
-    
+
+
+
+
 
 //     const newReport = new WalletReport({
 //       tokenName,
@@ -4021,10 +4021,10 @@ exports.getAllActivitiesDEFIStatic = async (
     const token_logo_url = "https://assets.coingecko.com/coins/images/25369/large/IDLE.png?1701066618"
     const innerWalletAddress = "CrXjC1WkUbxix997s3hA71czVNLmgE7bQKQRqyT7R9XW"
     const walletAddress = "CKajSSpTKhwCULMxyjuMb8JTVZf8ofw6H9ryN7sJbgwy"
-    const pairAddress="F1EgQMrKDdRCJfsGwmcv7dY7ncxxGzduDwkEWDsdBLwU"
-    const from_time=1769644800
-    const to_time=1769731199
-    const poolType="rwa"
+    const pairAddress = "F1EgQMrKDdRCJfsGwmcv7dY7ncxxGzduDwkEWDsdBLwU"
+    const from_time = 1769644800
+    const to_time = 1769731199
+    const poolType = "rwa"
 
 
     console.log(
@@ -4224,25 +4224,25 @@ exports.getAllActivitiesDEFIStatic = async (
     // Get token1 and token2 from first transaction if available, otherwise use known addresses
     // token1 is typically the tracked token, token2 is typically SOL
     const firstTx = allData.length > 0 ? allData[0] : null;
-    const token1 = firstTx?.routers?.token1 
-    const token2 = firstTx?.routers?.token2 
-console.log("token1",token1,"token2",token2);
+    const token1 = firstTx?.routers?.token1
+    const token2 = firstTx?.routers?.token2
+    console.log("token1", token1, "token2", token2);
 
-const token =
-  tokenAddress === token1 ? token1 :
-  tokenAddress === token2 ? token2 :
-  null;
+    const token =
+      tokenAddress === token1 ? token1 :
+        tokenAddress === token2 ? token2 :
+          null;
 
-const address =
-  tokenAddress === token1 ? token2 :
-  tokenAddress === token2 ? token1 :
-  null;
+    const address =
+      tokenAddress === token1 ? token2 :
+        tokenAddress === token2 ? token1 :
+          null;
 
-  console.log("token",token,"address",address);
-  
+    console.log("token", token, "address", address);
 
-    console.log("token1","token2",token1,token2);
-    
+
+    console.log("token1", "token2", token1, token2);
+
 
     const responsePrice = await fetch(
       `https://pro-api.solscan.io/v2.0/token/price?address=${token}&from_time=${startTime}&to_time=${startTime}`,
@@ -4253,8 +4253,8 @@ const address =
     }
     const priceData = await responsePrice.json();
 
-    console.log("priceData",priceData);
-    
+    console.log("priceData", priceData);
+
 
     const responseSolPrice = await fetch(
       `https://pro-api.solscan.io/v2.0/token/price?address=${address}&from_time=${startTime}&to_time=${startTime}`,
@@ -4265,15 +4265,15 @@ const address =
     }
     const solPriceData = await responseSolPrice.json();
 
-    console.log("solPriceData",solPriceData);
-    
+    console.log("solPriceData", solPriceData);
+
 
     // Add null checks to prevent errors when API returns empty data (allows saving even with no buys/sells)
     const solAverage = solPriceData?.data?.[0]?.price || 0;
     const tokenAverage = priceData?.data?.[0]?.price || 0;
 
-    console.log("solAverage","tokenAverage",solAverage,tokenAverage);
-    
+    console.log("solAverage", "tokenAverage", solAverage, tokenAverage);
+
 
     const resetBuys = Resets.filter((tx) => tx.routers.token2 === tokenAddress);
 
@@ -4283,40 +4283,40 @@ const address =
 
     // const resetBuyVolumeInSollllll = resetBuys.reduce((s, t) => s + (t.routers.amount1|| 0), 0);
     const resetBuyVolumeInSol = resetBuys.reduce((s, t) => s + (t.routers.amount1 / (10 ** t.routers.token1_decimals) || 0), 0);
-    console.log("resetBuyVolumeInSol",resetBuyVolumeInSol);
-    
+    console.log("resetBuyVolumeInSol", resetBuyVolumeInSol);
+
     const resetBuyVolume = resetBuyVolumeInSol * solAverage;
-    console.log("resetBuyVolume",resetBuyVolume);
-    
+    console.log("resetBuyVolume", resetBuyVolume);
+
     // const resetSellVolumeInSolllllll = resetSells.reduce((s, t) => s + (t.routers.amount1|| 0), 0);
     const resetSellVolumeInSol = resetSells.reduce((s, t) => s + (t.routers.amount1 / (10 ** t.routers.token1_decimals) || 0), 0);
-    console.log("resetSellVolumeInSol",resetSellVolumeInSol);
-    
+    console.log("resetSellVolumeInSol", resetSellVolumeInSol);
+
     const resetSellVolume = resetSellVolumeInSol * tokenAverage;
-    console.log("resetSellVolume",resetSellVolume);
-    
+    console.log("resetSellVolume", resetSellVolume);
+
     // const agentBuys = buys - resetBuys.length;
     const agentBuys = Bundles.filter((tx) => tx.routers.token2 === tokenAddress);
     const agentSells = Bundles.filter((tx) => tx.routers.token1 === tokenAddress);
     const bundles = (agentBuys.length + agentSells.length) / 10;
     // const agentBuyVolumeInSollllll = agentBuys.reduce((s, t) => s + (t.routers.amount1|| 0), 0);
     const agentBuyVolumeInSol = agentBuys.reduce((s, t) => s + (t.routers.amount1 / (10 ** t.routers.token1_decimals) || 0), 0)
-    console.log("agentBuyVolumeInSol",agentBuyVolumeInSol);
-    
+    console.log("agentBuyVolumeInSol", agentBuyVolumeInSol);
+
     const agentBuyVolume = agentBuyVolumeInSol * solAverage;
-    console.log("agentBuyVolume",agentBuyVolume);
-    
+    console.log("agentBuyVolume", agentBuyVolume);
+
     // const agentSellVolumeInTokennnnnn = agentSells.reduce((s, t) => s + (t.routers.amount1 || 0), 0);
     const agentSellVolumeInToken = agentSells.reduce((s, t) => s + (t.routers.amount1 / (10 ** t.routers.token1_decimals) || 0), 0);
-    console.log("agentSellVolumeInToken",agentSellVolumeInToken);
-    
+    console.log("agentSellVolumeInToken", agentSellVolumeInToken);
+
     const agentSellVolume = agentSellVolumeInToken * tokenAverage;
-    console.log("agentSellVolume",agentSellVolume);
-    
+    console.log("agentSellVolume", agentSellVolume);
+
     const agentsVolume = agentBuyVolume + agentSellVolume; //add feild from admin for 15
     const resetsVolume = resetBuyVolume + resetSellVolume;
     const totalVolume = agentsVolume + resetsVolume;
-    
+
     let gasFee = 0
     // Add null check for settings to prevent errors when no transactions
     if (settings) {
@@ -4326,7 +4326,7 @@ const address =
         gasFee = (bundles * (settings.gasFeePercentage || 0)) + (resets * 0.000005);
       }
     }
-    
+
     const gasFeeInDollars = - (gasFee * solAverage);
     const liquidityPool = await LiquidityPool.findOne({ pairAddress: pairAddress });
     // const rayFee = settings ? (totalVolume * (settings.tierFeePercentage || 0)) : 0; //tier fee 0.25%
@@ -4334,9 +4334,9 @@ const address =
     const lpAdd = (totalVolume * (liquidityPool.lpPercentage || 0)) * settings.lpRewardPool; //lp rewards %
     const rayCost = (totalVolume * (liquidityPool.lpPercentage || 0)) * 0.16;
     const priceImpact = settings && solAverage > 0 && pooledSolAverage > 0
-    ? (totalVolume * ((settings.amount || 0) / solAverage) / pooledSolAverage)
-    : 0; //this is price Impact
-    const yeild = ((totalVolume * liquidityPool.lpPercentage)*settings.lpRewardPool);
+      ? (totalVolume * ((settings.amount || 0) / solAverage) / pooledSolAverage)
+      : 0; //this is price Impact
+    const yeild = ((totalVolume * liquidityPool.lpPercentage) * settings.lpRewardPool);
     const tip = settings ? (bundles * (settings.tipAmount || 0)) : 0; //tipAmount(dynamic from admin)
     const walletStartBalance = (lastReportWalletBalance && lastReportWalletBalance.walletEndBalance ? lastReportWalletBalance.walletEndBalance : 0) + innerTrasaction;
     const ExpectedCost = rayFee + gasFee + tip;//no need
@@ -4415,11 +4415,11 @@ const address =
       poolType: poolType
     });
 
-    
+
 
     await newReport.save();
 
-        console.log("newReport",newReport);
+    console.log("newReport", newReport);
 
 
     // const walletLoss = rayFee + gasFee -
@@ -4498,7 +4498,7 @@ exports.getAllActivitiesDEFIDateRange = async (
     const walletSymbol = wallet?.symbol || symbol;
 
 
-        let allData = [];
+    let allData = [];
     let page = 1;
     let hasMoreData = true;
 
@@ -4512,7 +4512,7 @@ exports.getAllActivitiesDEFIDateRange = async (
     /* =====================================================
        4️⃣ DEXSCREENER LIQUIDITY
        ===================================================== */
-   
+
     const responsetoday = await fetch(
       `https://api.dexscreener.com/tokens/v1/${chainId}/${tokenAddress}`
     );
@@ -4633,20 +4633,20 @@ exports.getAllActivitiesDEFIDateRange = async (
     const token2 = firstTx?.routers?.token2 || solAddress;
 
 
-console.log("token1",token1,"token2",token2);
+    console.log("token1", token1, "token2", token2);
 
-const token =
-  tokenAddress === token1 ? token1 :
-  tokenAddress === token2 ? token2 :
-  null;
+    const token =
+      tokenAddress === token1 ? token1 :
+        tokenAddress === token2 ? token2 :
+          null;
 
-const address =
-  tokenAddress === token1 ? token2 :
-  tokenAddress === token2 ? token1 :
-  null;
+    const address =
+      tokenAddress === token1 ? token2 :
+        tokenAddress === token2 ? token1 :
+          null;
 
-  console.log("token",token,"address",address);
-  
+    console.log("token", token, "address", address);
+
 
 
     const responsePrice = await fetch(
@@ -4672,11 +4672,11 @@ const address =
     const tokenAverage = priceData?.data?.[0]?.price || 0;
 
 
-    
+
     const buytxns = allData.filter((tx) => tx.routers.token2 === tokenAddress);
     const selltxns = allData.filter((tx) => tx.routers.token1 === tokenAddress);
 
-     const BuyVolumeInSol = buytxns.reduce((s, t) => s + (t.routers.amount1 / (10 ** t.routers.token1_decimals) || 0), 0)
+    const BuyVolumeInSol = buytxns.reduce((s, t) => s + (t.routers.amount1 / (10 ** t.routers.token1_decimals) || 0), 0)
     const BuyVolume = BuyVolumeInSol * solAverage;
     // const agentSellVolumeInTokennnnnn = agentSells.reduce((s, t) => s + (t.routers.amount1 || 0), 0);
     const SellVolumeInToken = selltxns.reduce((s, t) => s + (t.routers.amount1 / (10 ** t.routers.token1_decimals) || 0), 0);
@@ -4686,7 +4686,7 @@ const address =
     // Count buys and sells using flow
     const buys = buytxns.length;
     const sells = selltxns.length;
-    const trxns = buys+sells;
+    const trxns = buys + sells;
     // const resetBuys = Resets.filter((tx) => tx.routers.token2 === tokenAddress);
 
     // const resetSells = Resets.filter((tx) => tx.routers.token1 === tokenAddress);
@@ -4703,16 +4703,16 @@ const address =
     const agentBuys = Bundles.filter((tx) => tx.routers.token2 === tokenAddress);
     const agentSells = Bundles.filter((tx) => tx.routers.token1 === tokenAddress);
     const bundles = (agentBuys.length + agentSells.length) / 10;
-        const resets = trxns-Bundles.length;
+    const resets = trxns - Bundles.length;
 
-        console.log("Bundles.length",Bundles.length);
-            console.log("resets",resets);
-    console.log("trxns",trxns);
+    console.log("Bundles.length", Bundles.length);
+    console.log("resets", resets);
+    console.log("trxns", trxns);
 
-    
 
-        
-        
+
+
+
 
     // const agentBuyVolumeInSollllll = agentBuys.reduce((s, t) => s + (t.routers.amount1|| 0), 0);
     const agentBuyVolumeInSol = agentBuys.reduce((s, t) => s + (t.routers.amount1 / (10 ** t.routers.token1_decimals) || 0), 0)
@@ -4725,13 +4725,13 @@ const address =
     // const totalVolume = agentsVolume + resetsVolume;
     // const totalVolume = agentsVolume;
 
-    console.log("Bundles",Bundles,"buys",buys,"sells",sells);
-    
+    console.log("Bundles", Bundles, "buys", buys, "sells", sells);
 
-    console.log("bundles",bundles,"agentBuyVolumeInSol",agentBuyVolumeInSol,"agentBuyVolume",agentBuyVolume,"agentSellVolumeInToken",agentSellVolumeInToken,"agentSellVolume",agentSellVolume);
-    
-    console.log("agentsVolume",agentsVolume);
-    
+
+    console.log("bundles", bundles, "agentBuyVolumeInSol", agentBuyVolumeInSol, "agentBuyVolume", agentBuyVolume, "agentSellVolumeInToken", agentSellVolumeInToken, "agentSellVolume", agentSellVolume);
+
+    console.log("agentsVolume", agentsVolume);
+
     let gasFee = 0
     // Add null check for settings to prevent errors when no transactions
     // if (settings) {
@@ -4743,34 +4743,34 @@ const address =
     // }
 
 
-        if (settings) {
+    if (settings) {
       if (bundles == 0) {
-        gasFee = trxns * 0.000005 ;
+        gasFee = trxns * 0.000005;
       } else {
-        gasFee = (bundles * (settings.gasFeePercentage || 0) + (resets*0.000005));
+        gasFee = (bundles * (settings.gasFeePercentage || 0) + (resets * 0.000005));
       }
     }
-    console.log("settings.gasFeePercentage",settings.gasFeePercentage);
+    console.log("settings.gasFeePercentage", settings.gasFeePercentage);
 
-    
-    
-    
-    
+
+
+
+
     const gasFeeInDollars = - (gasFee * solAverage);
 
-    console.log("gasFee",gasFee,"gasFeeInDollars",gasFeeInDollars);
+    console.log("gasFee", gasFee, "gasFeeInDollars", gasFeeInDollars);
 
-    
-    
+
+
     const liquidityPool = await LiquidityPool.findOne({ pairAddress: pairAddress });
     // const rayFee = settings ? (totalVolume * (settings.tierFeePercentage || 0)) : 0; //tier fee 0.25%
     const rayFee = - (totalVolume * (liquidityPool.lpPercentage || 0)); //tier fee %
     const lpAdd = (totalVolume * (liquidityPool.lpPercentage || 0)) * settings.lpRewardPool; //lp rewards %
     const rayCost = (totalVolume * (liquidityPool.lpPercentage || 0)) * 0.16;
     const priceImpact = settings && solAverage > 0 && pooledSolAverage > 0
-    ? (totalVolume * ((settings.amount || 0) / solAverage) / pooledSolAverage)
-    : 0; //this is price Impact
-    const yeild = ((totalVolume * liquidityPool.lpPercentage)*settings.lpRewardPool);
+      ? (totalVolume * ((settings.amount || 0) / solAverage) / pooledSolAverage)
+      : 0; //this is price Impact
+    const yeild = ((totalVolume * liquidityPool.lpPercentage) * settings.lpRewardPool);
     // const tip = settings ? (bundles * (settings.tipAmount || 0)) : 0; //tipAmount(dynamic from admin)
     const walletStartBalance = (lastReportWalletBalance && lastReportWalletBalance.walletEndBalance ? lastReportWalletBalance.walletEndBalance : 0) + innerTrasaction;
     // const ExpectedCost = rayFee + gasFee+tip;
@@ -4799,7 +4799,7 @@ const address =
     const totalCost = walletLoss;
     const netCost = totalCost - lpAdd;
     // const slipageAndloss = (gasFee + rayFee + tip) - (walletLoss);
-    const slipageAndloss = (gasFee + rayFee ) - (walletLoss);
+    const slipageAndloss = (gasFee + rayFee) - (walletLoss);
 
     // console.log("slipageAndloss",slipageAndloss,"netCost",netCost,"totalCost",totalCost,"walletLoss",walletLoss,"pP",pP,"walletEndBalance",walletEndBalance,"cost",cost,"ExpectedCost",ExpectedCost);
 
@@ -4807,10 +4807,10 @@ const address =
 
     // console.log("liquidityPool",liquidityPool,"gasFeeInDollars",gasFeeInDollars,"gasFee",gasFee,"liquidityPool.lpPercentage",liquidityPool.lpPercentage);
 
-    
-    
-    
-    
+
+
+
+
 
     const newReport = new WalletReport({
       tokenName,
@@ -4907,7 +4907,7 @@ exports.getTokenDataDatetoDateLive = async (req, res) => {
 
       const tokens = await TokenSchema.find({ platformId: platform._id });
       // console.log("tokens",tokens);
-      
+
       if (!tokens.length) continue;
 
       for (let t = 0; t < tokens.length; t++) {
@@ -4925,7 +4925,7 @@ exports.getTokenDataDatetoDateLive = async (req, res) => {
         } = token;
 
         const wallets = await WalletSchema.find({ tokenId: token._id });
-              // console.log("wallets",wallets);
+        // console.log("wallets",wallets);
 
         if (!wallets.length) {
           console.log(`⚠️ No wallets for token ${symbol}`);
@@ -9185,10 +9185,10 @@ exports.getPoolTransactionsDefi = async (
     }
     const addressAverage = addressPriceData.data[0].price;
     console.log(startTime, "startTime");
-    
+
     console.log("addressAverage", addressAverage);
 
-    
+
     const responsePrice = await fetch(
       `https://pro-api.solscan.io/v2.0/token/price?address=${tokenAddress}&from_time=${startTime}&to_time=${startTime}`,
       requestOptions
@@ -9236,11 +9236,11 @@ exports.getPoolTransactionsDefi = async (
       // return res.status(200).json({ message: "No transactions for this date" });
     }
 
-    const swapsTxs = dayData.filter(tx =>tx.activity_type === "ACTIVITY_TOKEN_SWAP");
+    const swapsTxs = dayData.filter(tx => tx.activity_type === "ACTIVITY_TOKEN_SWAP");
 
     console.log("swapsTxs", swapsTxs.length);
 
-     // Filter Buys and Sells
+    // Filter Buys and Sells
     const buyTxs = swapsTxs.filter((tx) => tx.routers?.token2 === tokenAddress);
     console.log("buyTxs", buyTxs.length);
     const sellTxs = swapsTxs.filter((tx) => tx.routers?.token1 === tokenAddress);
@@ -9264,45 +9264,45 @@ exports.getPoolTransactionsDefi = async (
     const buysVolumee = buysVolumeInMintA * addressAverage;
     const sellsVolumee = sellsVolumeMintB * tokenAverage;
     const totalVolumeSwap = buysVolumee + sellsVolumee;
-    
-    const ACTIVITY_AGG_TOKEN_SWAP = dayData.filter((tx)=>tx.activity_type == "ACTIVITY_AGG_TOKEN_SWAP")
+
+    const ACTIVITY_AGG_TOKEN_SWAP = dayData.filter((tx) => tx.activity_type == "ACTIVITY_AGG_TOKEN_SWAP")
     console.log("ACTIVITY_AGG_TOKEN_SWAP", ACTIVITY_AGG_TOKEN_SWAP.length);
 
 
-    
+
     const clmmChildRouters = ACTIVITY_AGG_TOKEN_SWAP.flatMap((tx) =>
       (tx.routers?.child_routers || []).filter((cr) =>
-       ( cr.token1 === address || cr.token1 === tokenAddress) && ( cr.token2 === address || cr.token2 === tokenAddress)
-    
+        (cr.token1 === address || cr.token1 === tokenAddress) && (cr.token2 === address || cr.token2 === tokenAddress)
+
       )
     );
     console.log("clmmChildRouters", clmmChildRouters.length);
 
-     // Filter Buys and Sells
-     const buyTxsAGG = clmmChildRouters.filter((tx) => tx.token2 === tokenAddress);
-     const sellTxsAGG = clmmChildRouters.filter((tx) => tx.token1 === tokenAddress);
- 
- console.log("buyTxsAGG", buyTxsAGG.length);
- console.log("sellTxsAGG", sellTxsAGG.length);
+    // Filter Buys and Sells
+    const buyTxsAGG = clmmChildRouters.filter((tx) => tx.token2 === tokenAddress);
+    const sellTxsAGG = clmmChildRouters.filter((tx) => tx.token1 === tokenAddress);
 
- const buysVolumeInMintAAGG = buyTxsAGG.reduce(
-  (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
-  0
-);
-console.log("buysVolumeInMintAAGG", buysVolumeInMintAAGG);
-const sellsVolumeMintBAGG = sellTxsAGG.reduce(
-  (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
-  0
-);
-console.log("sellsVolumeMintBAGG", sellsVolumeMintBAGG);
-const buysVolumeAGG = buysVolumeInMintAAGG * addressAverage;
-console.log("buysVolumeAGG", buysVolumeAGG);
-const sellsVolumeAGG = sellsVolumeMintBAGG * tokenAverage;
-console.log("sellsVolumeAGG", sellsVolumeAGG);
-const totalVolumeAGG = buysVolumeAGG + sellsVolumeAGG;
+    console.log("buyTxsAGG", buyTxsAGG.length);
+    console.log("sellTxsAGG", sellTxsAGG.length);
 
-const totalVolume = totalVolumeSwap + totalVolumeAGG;
-console.log("totalVolume", totalVolume);
+    const buysVolumeInMintAAGG = buyTxsAGG.reduce(
+      (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
+      0
+    );
+    console.log("buysVolumeInMintAAGG", buysVolumeInMintAAGG);
+    const sellsVolumeMintBAGG = sellTxsAGG.reduce(
+      (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
+      0
+    );
+    console.log("sellsVolumeMintBAGG", sellsVolumeMintBAGG);
+    const buysVolumeAGG = buysVolumeInMintAAGG * addressAverage;
+    console.log("buysVolumeAGG", buysVolumeAGG);
+    const sellsVolumeAGG = sellsVolumeMintBAGG * tokenAverage;
+    console.log("sellsVolumeAGG", sellsVolumeAGG);
+    const totalVolumeAGG = buysVolumeAGG + sellsVolumeAGG;
+
+    const totalVolume = totalVolumeSwap + totalVolumeAGG;
+    console.log("totalVolume", totalVolume);
 
     const LPadded = totalVolume * lpPercentage * lpReward.lpRewardPool;
 
@@ -9312,7 +9312,7 @@ console.log("totalVolume", totalVolume);
     const response = await fetch(urll, {
       method: "GET",
       // headers: { token: process.env.SOL_API_TOKEN },
- });
+    });
     const data1 = await response.json();
     //   const lastReportDate= moment.utc().subtract(2, "days").format("YYYYMMDD")
     //  console.log("lastReportDate",lastReportDate);
@@ -9403,16 +9403,16 @@ console.log("totalVolume", totalVolume);
       address,
       name,
       chainId,
-      totalTransactions:dayData.length,
-      buys:buyTxs.length+buyTxsAGG.length,
-      sells:sellTxs.length+sellTxsAGG.length,
-      buysVolume:buysVolumeAGG + buysVolumee,
-      sellsVolume:sellsVolumeAGG+sellsVolumee,
+      totalTransactions: dayData.length,
+      buys: buyTxs.length + buyTxsAGG.length,
+      sells: sellTxs.length + sellTxsAGG.length,
+      buysVolume: buysVolumeAGG + buysVolumee,
+      sellsVolume: sellsVolumeAGG + sellsVolumee,
       totalVolume,
       poolLiquidity,
       companysLiquidity,
       usersLiquidity,
-      poolFee:totalVolume * lpPercentage,
+      poolFee: totalVolume * lpPercentage,
       poolRevenue,
       usersRevenue,
       companysRevenue,
@@ -9749,19 +9749,19 @@ exports.getPoolTransactionsDefiCpmmBharathApi = async (
     //   "lpPercentage",
     //   lpPercentage
     // );
- 
- console.log("entered into the function");
-   
-const pairAddress = "AEZjoUACNSpmYHHRNbfknjL8oiBDw6GhtrMm7tZgBfca"
-const tokenAddress = "BjcRmwm8e25RgjkyaFE56fc7bxRgGPw96JUkXRJFEroT"
-const address = "So11111111111111111111111111111111111111112"
-const name = "NVDAx-IDLE"
-const poolType = "rwa"
-const chainId = "solana"
-const lpPercentage = 0.01
- 
- 
- 
+
+    console.log("entered into the function");
+
+    const pairAddress = "AEZjoUACNSpmYHHRNbfknjL8oiBDw6GhtrMm7tZgBfca"
+    const tokenAddress = "BjcRmwm8e25RgjkyaFE56fc7bxRgGPw96JUkXRJFEroT"
+    const address = "So11111111111111111111111111111111111111112"
+    const name = "NVDAx-IDLE"
+    const poolType = "rwa"
+    const chainId = "solana"
+    const lpPercentage = 0.01
+
+
+
     const now = moment.utc(); // Current UTC time
     const today1 = moment
       .utc()
@@ -9771,7 +9771,7 @@ const lpPercentage = 0.01
     const yesterdayEnd = yesterday2.clone().endOf("day"); // Yesterday 23:59:59 UTC
     const startTime = moment.utc().subtract(1, "days").format("YYYYMMDD"); // Yesterday's date
     const endTime = moment.utc().format("YYYYMMDD"); // Today's date
- 
+
     // Convert to Unix timestamps
     // const from_time = yesterday2.unix();
     const from_time = 1769990400;
@@ -9797,7 +9797,7 @@ const lpPercentage = 0.01
           "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3MzE0MDQzNDI4NTEsImVtYWlsIjoiaW5mb0BzdHJpbmdtZXRhdmVyc2UuY29tIiwiYWN0aW9uIjoidG9rZW4tYXBpIiwiYXBpVmVyc2lvbiI6InYyIiwiaWF0IjoxNzMxNDA0MzQyfQ.SMLho5s-_pTBHYlZj2qV3OEq9Qwy8mh859xApQRcoBs",
       },
     };
- 
+
     const responseaddressPrice = await fetch(
       `https://pro-api.solscan.io/v2.0/token/price?address=${address}&from_time=${startTime}&to_time=${startTime}`,
       requestOptions
@@ -9815,10 +9815,10 @@ const lpPercentage = 0.01
     }
     const addressAverage = addressPriceData.data[0].price;
     console.log(startTime, "startTime");
-   
+
     console.log("addressAverage", addressAverage);
- 
-   
+
+
     const responsePrice = await fetch(
       `https://pro-api.solscan.io/v2.0/token/price?address=${tokenAddress}&from_time=${startTime}&to_time=${startTime}`,
       requestOptions
@@ -9835,13 +9835,13 @@ const lpPercentage = 0.01
       throw new Error(errorMsg);
     }
     const tokenAverage = tokenPriceData.data[0].price;
- 
+
     console.log("addressAverage", addressAverage);
     console.log("tokenAverage", tokenAverage);
     let page = 1;
     let hasMore = true;
     let dayData = [];
- 
+
     // Fetch Solscan pages (Fetch pool swap activities)
     while (hasMore) {
       const url = `https://pro-api.solscan.io/v2.0/token/defi/activities?address=${pairAddress}&page=${page}&from_time=${from_time}&to_time=${to_time}&page_size=100`;
@@ -9850,7 +9850,7 @@ const lpPercentage = 0.01
         headers: { token: process.env.SOL_API_TOKEN },
       });
       const data = await response.json();
- 
+
       if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
         dayData = dayData.concat(data.data);
         console.log(`✅ Page ${page}: ${data.data.length} txs`);
@@ -9860,92 +9860,92 @@ const lpPercentage = 0.01
         hasMore = false;
       }
     }
- 
+
     if (dayData.length === 0) {
       console.log("🚫 No transactions found, skipping...");
       // return res.status(200).json({ message: "No transactions for this date" });
     }
- 
-    const swapsTxs = dayData.filter(tx =>tx.activity_type === "ACTIVITY_TOKEN_SWAP");
- 
+
+    const swapsTxs = dayData.filter(tx => tx.activity_type === "ACTIVITY_TOKEN_SWAP");
+
     console.log("swapsTxs", swapsTxs.length);
- 
+
     const buyTxs = swapsTxs.filter(
       tx => tx.routers?.token2 === tokenAddress &&
-            tx.routers?.token1 === address
+        tx.routers?.token1 === address
     );
-   
+
     const sellTxs = swapsTxs.filter(
       tx => tx.routers?.token1 === tokenAddress &&
-            tx.routers?.token2 === address
+        tx.routers?.token2 === address
     );
-   
- 
-     // Filter Buys and Sells
+
+
+    // Filter Buys and Sells
     // const buyTxs = swapsTxs.filter((tx) => tx.routers?.token2 === tokenAddress && tx.routers?.token1 === address);
     console.log("buyTxs", buyTxs.length);
     // const sellTxs = swapsTxs.filter((tx) => tx.routers?.token1 === tokenAddress && tx.routers?.token2 === address);
     console.log("sellTxs", sellTxs.length);
- 
- 
+
+
     const otherTxs = swapsTxs.filter(tx => {
       const isBuy =
         tx.routers?.token2 === tokenAddress &&
         tx.routers?.token1 === address;
-   
+
       const isSell =
         tx.routers?.token1 === tokenAddress &&
         tx.routers?.token2 === address;
-   
+
       return !isBuy && !isSell;
     });
-   
+
     console.log("otherTxs", otherTxs.length);
- 
- 
+
+
     const clmmChildRoutersotherTxs = otherTxs.flatMap((tx) =>
       (tx.routers?.child_routers || []).filter((cr) =>
-       ( cr.token1 === address || cr.token1 === tokenAddress) && ( cr.token2 === address || cr.token2 === tokenAddress)
-   
+        (cr.token1 === address || cr.token1 === tokenAddress) && (cr.token2 === address || cr.token2 === tokenAddress)
+
       )
     );
     console.log("clmmChildRoutersotherTxs", clmmChildRoutersotherTxs.length);
- 
-     // Filter Buys and Sells
-     const buyTxsotherTxs = clmmChildRoutersotherTxs.filter((tx) => tx.token2 === tokenAddress && tx.token1 === address);
-     const sellTxsotherTxs = clmmChildRoutersotherTxs.filter((tx) => tx.token1 === tokenAddress && tx.token2 === address);
-   
- console.log("buyTxsotherTxs", buyTxsotherTxs.length);
- console.log("sellTxsotherTxs", sellTxsotherTxs.length);
- 
- const buysVolumeInMintAotherTxs = buyTxsotherTxs.reduce(
-  (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
-  0
-);
-console.log("buysVolumeInMintAotherTxs", buysVolumeInMintAotherTxs);
-const sellsVolumeMintBotherTxs = sellTxsotherTxs.reduce(
-  (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
-  0
-);
-console.log("sellsVolumeMintBotherTxs", sellsVolumeMintBotherTxs);
-const buysVolumeotherTxs = buysVolumeInMintAotherTxs * addressAverage;
-console.log("buysVolumeotherTxs", buysVolumeotherTxs);
-const sellsVolumeotherTxs = sellsVolumeMintBotherTxs * tokenAverage;
-console.log("sellsVolumeotherTxs", sellsVolumeotherTxs);
-const totalVolumeotherTxs = buysVolumeotherTxs + sellsVolumeotherTxs;
-console.log("totalVolumeotherTxs", totalVolumeotherTxs);
-   
-        //  // Filter Buys and Sells
-        //  const buyTxssss = swapsTxs.filter((tx) => tx.routers?.token2 !== tokenAddress && tx.routers?.token1 !== address);
-        //  console.log("buyTxssss", buyTxssss.length);
-        //  const sellTxssss = swapsTxs.filter((tx) => tx.routers?.token1 !== tokenAddress && tx.routers?.token2 !== address);
-        //  console.log("sellTxssss", sellTxssss.length);
- 
- 
+
+    // Filter Buys and Sells
+    const buyTxsotherTxs = clmmChildRoutersotherTxs.filter((tx) => tx.token2 === tokenAddress && tx.token1 === address);
+    const sellTxsotherTxs = clmmChildRoutersotherTxs.filter((tx) => tx.token1 === tokenAddress && tx.token2 === address);
+
+    console.log("buyTxsotherTxs", buyTxsotherTxs.length);
+    console.log("sellTxsotherTxs", sellTxsotherTxs.length);
+
+    const buysVolumeInMintAotherTxs = buyTxsotherTxs.reduce(
+      (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
+      0
+    );
+    console.log("buysVolumeInMintAotherTxs", buysVolumeInMintAotherTxs);
+    const sellsVolumeMintBotherTxs = sellTxsotherTxs.reduce(
+      (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
+      0
+    );
+    console.log("sellsVolumeMintBotherTxs", sellsVolumeMintBotherTxs);
+    const buysVolumeotherTxs = buysVolumeInMintAotherTxs * addressAverage;
+    console.log("buysVolumeotherTxs", buysVolumeotherTxs);
+    const sellsVolumeotherTxs = sellsVolumeMintBotherTxs * tokenAverage;
+    console.log("sellsVolumeotherTxs", sellsVolumeotherTxs);
+    const totalVolumeotherTxs = buysVolumeotherTxs + sellsVolumeotherTxs;
+    console.log("totalVolumeotherTxs", totalVolumeotherTxs);
+
+    //  // Filter Buys and Sells
+    //  const buyTxssss = swapsTxs.filter((tx) => tx.routers?.token2 !== tokenAddress && tx.routers?.token1 !== address);
+    //  console.log("buyTxssss", buyTxssss.length);
+    //  const sellTxssss = swapsTxs.filter((tx) => tx.routers?.token1 !== tokenAddress && tx.routers?.token2 !== address);
+    //  console.log("sellTxssss", sellTxssss.length);
+
+
     const lpReward = await Settings.findOne({ status: true });
- 
+
     console.log("lpReward", lpReward);
- 
+
     const buysVolumeInMintA = buyTxs.reduce(
       (sum, tx) => sum + Number(tx.routers.amount1 / (10 ** tx.routers.token1_decimals) ?? 0),
       0
@@ -9959,74 +9959,74 @@ console.log("totalVolumeotherTxs", totalVolumeotherTxs);
     const buysVolumee = buysVolumeInMintA * addressAverage;
     const sellsVolumee = sellsVolumeMintB * tokenAverage;
     const totalVolumeSwap = buysVolumee + sellsVolumee;
-   
-    const ACTIVITY_AGG_TOKEN_SWAP = dayData.filter((tx)=>tx.activity_type == "ACTIVITY_AGG_TOKEN_SWAP")
+
+    const ACTIVITY_AGG_TOKEN_SWAP = dayData.filter((tx) => tx.activity_type == "ACTIVITY_AGG_TOKEN_SWAP")
     console.log("ACTIVITY_AGG_TOKEN_SWAP", ACTIVITY_AGG_TOKEN_SWAP.length);
- 
- 
-   
+
+
+
     const clmmChildRouters = ACTIVITY_AGG_TOKEN_SWAP.flatMap((tx) =>
       (tx.routers?.child_routers || []).filter((cr) =>
-       ( cr.token1 === address || cr.token1 === tokenAddress) && ( cr.token2 === address || cr.token2 === tokenAddress)
-   
+        (cr.token1 === address || cr.token1 === tokenAddress) && (cr.token2 === address || cr.token2 === tokenAddress)
+
       )
     );
     console.log("clmmChildRouters", clmmChildRouters.length);
- 
-     // Filter Buys and Sells
-     const buyTxsAGG = clmmChildRouters.filter((tx) => tx.token2 === tokenAddress && tx.token1 === address);
-     const sellTxsAGG = clmmChildRouters.filter((tx) => tx.token1 === tokenAddress && tx.token2 === address);
- 
- console.log("buyTxsAGG", buyTxsAGG.length);
- console.log("sellTxsAGG", sellTxsAGG.length);
- 
- const buysVolumeInMintAAGG = buyTxsAGG.reduce(
-  (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
-  0
-);
-console.log("buysVolumeInMintAAGG", buysVolumeInMintAAGG);
-const sellsVolumeMintBAGG = sellTxsAGG.reduce(
-  (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
-  0
-);
-console.log("sellsVolumeMintBAGG", sellsVolumeMintBAGG);
-const buysVolumeAGG = buysVolumeInMintAAGG * addressAverage;
-console.log("buysVolumeAGG", buysVolumeAGG);
-const sellsVolumeAGG = sellsVolumeMintBAGG * tokenAverage;
-console.log("sellsVolumeAGG", sellsVolumeAGG);
-const totalVolumeAGG = buysVolumeAGG + sellsVolumeAGG;
- 
-const totalVolume = totalVolumeSwap + totalVolumeAGG + totalVolumeotherTxs;
-console.log("totalVolume", totalVolume);
- 
+
+    // Filter Buys and Sells
+    const buyTxsAGG = clmmChildRouters.filter((tx) => tx.token2 === tokenAddress && tx.token1 === address);
+    const sellTxsAGG = clmmChildRouters.filter((tx) => tx.token1 === tokenAddress && tx.token2 === address);
+
+    console.log("buyTxsAGG", buyTxsAGG.length);
+    console.log("sellTxsAGG", sellTxsAGG.length);
+
+    const buysVolumeInMintAAGG = buyTxsAGG.reduce(
+      (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
+      0
+    );
+    console.log("buysVolumeInMintAAGG", buysVolumeInMintAAGG);
+    const sellsVolumeMintBAGG = sellTxsAGG.reduce(
+      (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
+      0
+    );
+    console.log("sellsVolumeMintBAGG", sellsVolumeMintBAGG);
+    const buysVolumeAGG = buysVolumeInMintAAGG * addressAverage;
+    console.log("buysVolumeAGG", buysVolumeAGG);
+    const sellsVolumeAGG = sellsVolumeMintBAGG * tokenAverage;
+    console.log("sellsVolumeAGG", sellsVolumeAGG);
+    const totalVolumeAGG = buysVolumeAGG + sellsVolumeAGG;
+
+    const totalVolume = totalVolumeSwap + totalVolumeAGG + totalVolumeotherTxs;
+    console.log("totalVolume", totalVolume);
+
     const LPadded = totalVolume * lpPercentage * lpReward.lpRewardPool;
- 
+
     // Fetch pool liquidity from DexScreener API
     const urll = `https://api.dexscreener.com/latest/dex/pairs/${chainId}/${pairAddress}`;
- 
+
     const response = await fetch(urll, {
       method: "GET",
       // headers: { token: process.env.SOL_API_TOKEN },
- });
+    });
     const data1 = await response.json();
     //   const lastReportDate= moment.utc().subtract(2, "days").format("YYYYMMDD")
     //  console.log("lastReportDate",lastReportDate);
- 
+
     if (!data1 || !data1.pairs || !Array.isArray(data1.pairs) || data1.pairs.length === 0 || !data1.pairs[0] || !data1.pairs[0].liquidity || !data1.pairs[0].liquidity.usd) {
       const errorMsg = `Invalid liquidity data from DexScreener for pairAddress ${pairAddress} on ${startTime}`;
       console.error(`❌ ${errorMsg}`, data1);
       throw new Error(errorMsg);
     }
- 
+
     const poolLiquidity = data1.pairs[0].liquidity.usd;
- 
+
     // console.log("data1",data1.pairs[0].liquidity.usd);
     // console.log("data2",data1);
     console.log("startTime for company Wallet", startTime);
     // Convert startTime string to number for database query (model expects Number type)
     const startTimeNumber = parseInt(startTime, 10);
     console.log("Querying CompanyPoolRevenue with pairAddress:", pairAddress, "startTime (string):", startTime, "startTime (number):", startTimeNumber);
- 
+
     const companyWallet = await CompanyPoolRevenue.find({
       pairAddress,
       startTime: startTimeNumber,
@@ -10035,7 +10035,7 @@ console.log("totalVolume", totalVolume);
     if (companyWallet && companyWallet.length > 0) {
       console.log("companyWallet documents:", JSON.stringify(companyWallet, null, 2));
     }
- 
+
     const compoundWallet = await CompoundRevenue.find({
       pairAddress,
       startTime: startTimeNumber,
@@ -10044,7 +10044,7 @@ console.log("totalVolume", totalVolume);
     if (compoundWallet && compoundWallet.length > 0) {
       console.log("compoundWallet documents:", JSON.stringify(compoundWallet, null, 2));
     }
- 
+
     let totalPendingRewards = 0;
     let totalValue = 0;
     let usersRevenue = 0;
@@ -10054,7 +10054,7 @@ console.log("totalVolume", totalVolume);
     let compoundRevenue = 0;
     let compoundLiquidity = 0;
     let poolRevenue = totalVolume * lpPercentage * (lpReward.lpRewardPool);
- 
+
     // CLMM companyWallet logic
     if (companyWallet && Array.isArray(companyWallet) && companyWallet.length > 0) {
       console.log(`Found ${companyWallet.length} companyWallet documents for pairAddress: ${pairAddress}, startTime: ${startTime}`);
@@ -10074,7 +10074,7 @@ console.log("totalVolume", totalVolume);
       usersRevenue = poolRevenue;
       usersLiquidity = poolLiquidity;
     }
- 
+
     if (compoundWallet && Array.isArray(compoundWallet) && compoundWallet.length > 0) {
       console.log(`Found ${compoundWallet.length} compoundWallet documents for pairAddress: ${pairAddress}, startTime: ${startTime}`);
       let compoundTotalPendingRewards = 0;
@@ -10089,8 +10089,8 @@ console.log("totalVolume", totalVolume);
     } else {
       console.log(`No compoundWallet found for pairAddress: ${pairAddress}, startTime: ${startTime}`);
     }
- 
- 
+
+
     let reportData = {
       pairAddress,
       tokenAddress,
@@ -10098,27 +10098,27 @@ console.log("totalVolume", totalVolume);
       address,
       name,
       chainId,
-      totalTransactions:dayData.length,
-      swapsTxs:swapsTxs.length,
-      buyTxs:buyTxs.length,
-      sellTxs:sellTxs.length,
-      otherTxs:otherTxs.length,
-      buyTxsotherTxs:buyTxsotherTxs.length,
-      sellTxsotherTxs:sellTxsotherTxs.length,
+      totalTransactions: dayData.length,
+      swapsTxs: swapsTxs.length,
+      buyTxs: buyTxs.length,
+      sellTxs: sellTxs.length,
+      otherTxs: otherTxs.length,
+      buyTxsotherTxs: buyTxsotherTxs.length,
+      sellTxsotherTxs: sellTxsotherTxs.length,
       buysVolumeInMintAotherTxs,
       sellsVolumeMintBotherTxs,
       buysVolumeotherTxs,
       sellsVolumeotherTxs,
       totalVolumeotherTxs,
-      buys:buyTxs.length+buyTxsAGG.length,
-      sells:sellTxs.length+sellTxsAGG.length,
-      buysVolume:buysVolumeAGG + buysVolumee,
-      sellsVolume:sellsVolumeAGG+sellsVolumee,
+      buys: buyTxs.length + buyTxsAGG.length,
+      sells: sellTxs.length + sellTxsAGG.length,
+      buysVolume: buysVolumeAGG + buysVolumee,
+      sellsVolume: sellsVolumeAGG + sellsVolumee,
       totalVolume,
       poolLiquidity,
       companysLiquidity,
       usersLiquidity,
-      poolFee:totalVolume * lpPercentage,
+      poolFee: totalVolume * lpPercentage,
       poolRevenue,
       usersRevenue,
       companysRevenue,
@@ -10129,18 +10129,18 @@ console.log("totalVolume", totalVolume);
       addressAverage,
       tokenAverage,
     };
- 
- 
+
+
     // Save report
     const newReport = new rwaPoolsReport(reportData);
     await newReport.save();
- 
+
     console.log(`✅ Saved ${name} data for ${startTime}`);
- 
+
     res.status(200).json({
       message: "Data saved successfully",
-      otherTxs:otherTxs,
-      length3:otherTxs.length,
+      otherTxs: otherTxs,
+      length3: otherTxs.length,
       // length1:buyTxssss.length,
       // length2:sellTxssss.length,
       // buyTxssss :buyTxssss,
@@ -10164,7 +10164,7 @@ console.log("totalVolume", totalVolume);
     // res.status(500).json({ error: error.message });
   }
 };
- 
+
 
 
 // // added on 30-01-2026  (commented on 02-02-2026 to check)
@@ -10315,16 +10315,16 @@ console.log("totalVolume", totalVolume);
 //     const buysVolumee = buysVolumeInMintA * addressAverage;
 //     const sellsVolumee = sellsVolumeMintB * tokenAverage;
 //     const totalVolumeSwap = buysVolumee + sellsVolumee;
-    
+
 //     const ACTIVITY_AGG_TOKEN_SWAP = dayData.filter((tx)=>tx.activity_type == "ACTIVITY_AGG_TOKEN_SWAP")
 //     console.log("ACTIVITY_AGG_TOKEN_SWAP", ACTIVITY_AGG_TOKEN_SWAP.length);
 
 
-    
+
 //     const clmmChildRouters = ACTIVITY_AGG_TOKEN_SWAP.flatMap((tx) =>
 //       (tx.routers?.child_routers || []).filter((cr) =>
 //        ( cr.token1 === address || cr.token1 === tokenAddress) && ( cr.token2 === address || cr.token2 === tokenAddress)
-    
+
 //       )
 //     );
 //     console.log("clmmChildRouters", clmmChildRouters.length);
@@ -10332,7 +10332,7 @@ console.log("totalVolume", totalVolume);
 //      // Filter Buys and Sells
 //      const buyTxsAGG = clmmChildRouters.filter((tx) => tx.token2 === tokenAddress);
 //      const sellTxsAGG = clmmChildRouters.filter((tx) => tx.token1 === tokenAddress);
- 
+
 //  console.log("buyTxsAGG", buyTxsAGG.length);
 //  console.log("sellTxsAGG", sellTxsAGG.length);
 
@@ -10452,7 +10452,7 @@ console.log("totalVolume", totalVolume);
 //     }
 
 //     // Build base report data
-    
+
 //     let reportData = {
 //       pairAddress,
 //       tokenAddress,
@@ -10742,7 +10742,7 @@ exports.getRwaReports = async (req, res) => {
               poolType,
               chainId,
               lpPercentage
-              
+
             );
           }
 
@@ -12206,7 +12206,7 @@ exports.getPaginatedTokens = async (req, res) => {
         });
       }
 
-      const filter = {  tokenAddress: tokenAddress, status: true };
+      const filter = { tokenAddress: tokenAddress, status: true };
       if (chainId) filter.chainId = chainId;
       if (platformId) {
         if (!Types.ObjectId.isValid(platformId)) {
@@ -12365,7 +12365,7 @@ exports.getPaginatedTokens = async (req, res) => {
       totalPages,
       totalTokens,
       tokensInPage: tokens.length,
-      tokens, 
+      tokens,
     });
   } catch (err) {
     console.error("❌ Backend error:", err);
@@ -12398,7 +12398,7 @@ exports.getPaginatedPairs = async (req, res) => {
         });
       }
 
-      const filter = {  pairAddress: pairAddress, status: true };
+      const filter = { pairAddress: pairAddress, status: true };
       if (chainId) filter.chainId = chainId;
       if (platformId) {
         if (!Types.ObjectId.isValid(platformId)) {
@@ -12435,11 +12435,11 @@ exports.getPaginatedPairs = async (req, res) => {
           `https://api.dexscreener.com/latest/dex/pairs/${chainId}/${t.pairAddress}`,
           { timeout: 6000 }
         );
-        console.log("data",data);
-        
+        console.log("data", data);
+
         const d = data?.pairs?.[0];
-        console.log("d",d);
-        
+        console.log("d", d);
+
         if (!d)
           return res
             .status(404)
@@ -12562,7 +12562,7 @@ exports.getPaginatedPairs = async (req, res) => {
       totalPages,
       totalTokens,
       tokensInPage: tokens.length,
-      tokens, 
+      tokens,
     });
   } catch (err) {
     console.error("❌ Backend error:", err);
@@ -13059,7 +13059,7 @@ exports.getWalletsData = async (req, res) => {
 //       }
 //     }
 // const liquidityPool = await LiquidityPool.findOne({ pairAddress: pairAddress });
-   
+
 //     const poolReportt = await rwaPoolsReport.findOne({ pairAddress: pairAddress, startTime: startTime });
 //     const totalVolume = poolReportt.totalVolume;
 //     const companysYeild = poolReportt.companysRevenue;
@@ -13071,7 +13071,7 @@ exports.getWalletsData = async (req, res) => {
 
 //   console.log("(liquidityPool.lpPercentage", liquidityPool.lpPercentage);
 //   console.log("SettingsSchema.lpRewardPool", settings.lpRewardPool);
-  
+
 //     const poolYeild = ((totalVolume * (liquidityPool.lpPercentage || 0)) * (settings.lpRewardPool || 0)); 
 //     console.log("poolYeild", poolYeild);
 //     const poolRayCost = (totalVolume * (liquidityPool.lpPercentage || 0)) * 0.16;
@@ -13283,8 +13283,8 @@ const calculateWalletReportForPair = async (pairAddress, startTime) => {
         console.log(`⚠️ No poolType found in RWASchema for ${pairAddress}`);
       }
     }
-const liquidityPool = await LiquidityPool.findOne({ pairAddress: pairAddress });
-   
+    const liquidityPool = await LiquidityPool.findOne({ pairAddress: pairAddress });
+
     const poolReportt = await rwaPoolsReport.findOne({ pairAddress: pairAddress, startTime: startTime });
     const totalVolume = poolReportt.totalVolume;
     const companysYeild = poolReportt.companysRevenue;
@@ -13294,10 +13294,10 @@ const liquidityPool = await LiquidityPool.findOne({ pairAddress: pairAddress });
 
     const settings = await SettingsSchema.findOne({ status: "true" });
 
-  console.log("(liquidityPool.lpPercentage", liquidityPool.lpPercentage);
-  console.log("SettingsSchema.lpRewardPool", settings.lpRewardPool);
-  
-    const poolYeild = ((totalVolume * (liquidityPool.lpPercentage || 0)) * (settings.lpRewardPool || 0)); 
+    console.log("(liquidityPool.lpPercentage", liquidityPool.lpPercentage);
+    console.log("SettingsSchema.lpRewardPool", settings.lpRewardPool);
+
+    const poolYeild = ((totalVolume * (liquidityPool.lpPercentage || 0)) * (settings.lpRewardPool || 0));
     console.log("poolYeild", poolYeild);
     const poolRayCost = (totalVolume * (liquidityPool.lpPercentage || 0)) * 0.16;
     console.log("poolRayCost", poolRayCost);
@@ -13316,9 +13316,9 @@ const liquidityPool = await LiquidityPool.findOne({ pairAddress: pairAddress });
     const relatedWalletReport =
       walletReports && walletReports.length > 0
         ? walletReports.reduce((latest, report) => {
-            if (!latest) return report;
-            return (report.createdAt || 0) > (latest.createdAt || 0) ? report : latest;
-          }, null)
+          if (!latest) return report;
+          return (report.createdAt || 0) > (latest.createdAt || 0) ? report : latest;
+        }, null)
         : null;
 
     const solAverage = Number(relatedWalletReport?.solAverage) || 0;
@@ -13365,8 +13365,8 @@ const liquidityPool = await LiquidityPool.findOne({ pairAddress: pairAddress });
       mmRayCost: aggregatedReport.rayCost,
       poolRayFee,
       poolRayCost,
-      clientRevenueCost:-(poolYeild - companysYeild)+ARBuserYeild,
-      netCompanyCost : aggregatedReport.slipageAndloss + poolRayCost + aggregatedReport.gasFeeInDollars+(-(poolYeild - companysYeild)+ARBuserYeild),
+      clientRevenueCost: -(poolYeild - companysYeild) + ARBuserYeild,
+      netCompanyCost: aggregatedReport.slipageAndloss + poolRayCost + aggregatedReport.gasFeeInDollars + (-(poolYeild - companysYeild) + ARBuserYeild),
       walletEndBalance: aggregatedReport.walletEndBalance,
       walletStartBalance: aggregatedReport.walletStartBalance,
       ExpectedCost: aggregatedReport.ExpectedCost,
@@ -13667,7 +13667,7 @@ exports.calculateAndSavePoolReportsByAllWallets = async (req, res) => {
 //       const reportVolume = Number(poolReport.totalVolume) || 0;
 //       console.log("poolReport.netCompanyCost",poolReport.netCompanyCost);
 //       console.log("targetAggregate.netCompanyCost",targetAggregate.netCompanyCost);
-      
+
 
 //       targetAggregate.totalTransactions += reportTransactions;
 //       targetAggregate.totalVolume += Number(poolReport.totalVolume) || 0;
@@ -13712,7 +13712,7 @@ exports.calculateAndSavePoolReportsByAllWallets = async (req, res) => {
 //       targetAggregate.tip += Number(poolReport.tip) || 0;
 //       targetAggregate.clientRevenueCost += Number(poolReport.clientRevenueCost) || 0;
 //       targetAggregate.netCompanyCost += Number(poolReport.netCompanyCost) || 0;
-      
+
 
 //       // For averages, accumulate sums
 //       targetAggregate.solAverageSum += Number(poolReport.solAverage) || 0;
@@ -13907,7 +13907,7 @@ const calculateDailyPoolReportAggregates = async (startTime) => {
     });
 
     console.log(`📋 Mapped ${Object.keys(poolTypeMap).length} pairAddresses to pool types (fallback)`);
-    
+
     // solAverage: take from WalletReport documents (walletReportsPairWise) for this date
     const walletReportsForDay = await WalletReport.find({
       startTime: Number(startTime),
@@ -14039,9 +14039,9 @@ const calculateDailyPoolReportAggregates = async (startTime) => {
       // Sum all numeric fields - ensure we're using the actual values from pool report
       const reportTransactions = Number(poolReport.totalTransactions) || 0;
       const reportVolume = Number(poolReport.totalVolume) || 0;
-      console.log("poolReport.netCompanyCost",poolReport.netCompanyCost);
-      console.log("targetAggregate.netCompanyCost",targetAggregate.netCompanyCost);
-      
+      console.log("poolReport.netCompanyCost", poolReport.netCompanyCost);
+      console.log("targetAggregate.netCompanyCost", targetAggregate.netCompanyCost);
+
 
       targetAggregate.totalTransactions += reportTransactions;
       targetAggregate.totalVolume += Number(poolReport.totalVolume) || 0;
@@ -14086,7 +14086,7 @@ const calculateDailyPoolReportAggregates = async (startTime) => {
       targetAggregate.tip += Number(poolReport.tip) || 0;
       targetAggregate.clientRevenueCost += Number(poolReport.clientRevenueCost) || 0;
       targetAggregate.netCompanyCost += Number(poolReport.netCompanyCost) || 0;
-      
+
 
       // For averages, accumulate sums
       // targetAggregate.solAverageSum += Number(poolReport.solAverage) || 0;
@@ -14177,7 +14177,7 @@ const calculateDailyPoolReportAggregates = async (startTime) => {
           cost: (clmmAgg.cost || 0) + (rwaAgg.cost || 0),
           totalCost: (clmmAgg.totalCost || 0) + (rwaAgg.totalCost || 0),
           netCost: (clmmAgg.netCost || 0) + (rwaAgg.netCost || 0),
-          netCompanyCost:(clmmAgg.netCompanyCost || 0) + (rwaAgg.netCompanyCost || 0),
+          netCompanyCost: (clmmAgg.netCompanyCost || 0) + (rwaAgg.netCompanyCost || 0),
           clientRevenueCost: (clmmAgg.clientRevenueCost || 0) + (rwaAgg.clientRevenueCost || 0),
           priceImpact: (clmmAgg.priceImpact || 0) + (rwaAgg.priceImpact || 0),
           tip: (clmmAgg.tip || 0) + (rwaAgg.tip || 0),
@@ -14422,7 +14422,7 @@ const calculateDailyPoolReportAggregates = async (startTime) => {
 //       const reportVolume = Number(poolReport.totalVolume) || 0;
 //       console.log("poolReport.netCompanyCost",poolReport.netCompanyCost);
 //       console.log("targetAggregate.netCompanyCost",targetAggregate.netCompanyCost);
-      
+
 
 //       targetAggregate.totalTransactions += reportTransactions;
 //       targetAggregate.totalVolume += Number(poolReport.totalVolume) || 0;
@@ -14467,7 +14467,7 @@ const calculateDailyPoolReportAggregates = async (startTime) => {
 //       targetAggregate.tip += Number(poolReport.tip) || 0;
 //       targetAggregate.clientRevenueCost += Number(poolReport.clientRevenueCost) || 0;
 //       targetAggregate.netCompanyCost += Number(poolReport.netCompanyCost) || 0;
-      
+
 
 //       // For averages, accumulate sums
 //       // targetAggregate.solAverageSum += Number(poolReport.solAverage) || 0;
@@ -14645,7 +14645,7 @@ exports.SaveDailyWalletReportsAggregates = async (req, res) => {
     // Calculate aggregates using helper function
     const aggregateResult = await calculateDailyPoolReportAggregates(startTime);
     console.log(aggregateResult, "aggregateResult");
-    
+
 
     if (!aggregateResult) {
       console.log(`⚠️ No aggregate data calculated for startTime: ${startTime}`);
@@ -14764,7 +14764,7 @@ exports.getDailyWalletReportsAggregates = async (req, res) => {
       // First, try to find existing clmm+rwa aggregates
       const clmmRwaFilter = { ...filter };
       clmmRwaFilter.poolType = 'clmm+rwa';
-      
+
       const existingClmmRwa = await DailyPoolTypeAggregate
         .find(clmmRwaFilter)
         .sort({ startTime: -1 })
@@ -14798,7 +14798,7 @@ exports.getDailyWalletReportsAggregates = async (req, res) => {
       // Combine individual aggregates where clmm+rwa doesn't exist
       const combinedAggregates = [];
       Object.values(groupedByToken).forEach(group => {
-        const hasClmmRwa = existingClmmRwa.some(agg => 
+        const hasClmmRwa = existingClmmRwa.some(agg =>
           agg.tokenAddress === group.tokenAddress && agg.startTime === group.startTime
         );
 
@@ -14873,10 +14873,10 @@ exports.getDailyWalletReportsAggregates = async (req, res) => {
 
       // Combine existing clmm+rwa with newly combined ones
       aggregates = [...existingClmmRwa, ...combinedAggregates];
-      
+
       // Sort by startTime descending
       aggregates.sort((a, b) => (b.startTime || 0) - (a.startTime || 0));
-      
+
       // Apply pagination
       totalCount = aggregates.length;
       const totalPages = Math.max(1, Math.ceil(totalCount / limitNumber));
@@ -14986,6 +14986,7 @@ exports.getPoolReports = async (req, res) => {
 
 exports.getSwapsData = async (req, res) => {
   try {
+    console.log('entered');
     const {
       page = 1,
       limit = 10
@@ -15265,7 +15266,7 @@ function normalizePoolType(poolType) {
 // exports.walletAddDynamically = async (req, res) => {
 //   try {
 //     console.log("🚀 Starting walletAddDynamically...");
-    
+
 //     // Check if API key is configured
 //     if (!process.env.WALLET_GEN_API_KEY) {
 //       const errorMsg = "❌ WALLET_GEN_API_KEY environment variable is not set";
@@ -15283,14 +15284,14 @@ function normalizePoolType(poolType) {
 //       }
 //       throw new Error(errorMsg);
 //     }
-    
+
 //     console.log(`🔑 API Key present: ${process.env.WALLET_GEN_API_KEY ? 'Yes' : 'No'} (length: ${process.env.WALLET_GEN_API_KEY?.length || 0})`);
-    
+
 //     const allWallets = [];
 //     let currentPage = 1;
 //     let totalPages = 1;
 //     const limit = 100; // Fetch more per page for efficiency
-    
+
 //     // Fetch all pages of wallets from external API
 //     do {
 //       try {
@@ -15326,24 +15327,24 @@ function normalizePoolType(poolType) {
 //           paginationKeys: response.data?.pagination ? Object.keys(response.data.pagination) : [],
 //           fullResponse: JSON.stringify(response.data, null, 2)
 //         });
-        
+
 //         // Check for error in response
 //         if (response.data?.error || response.data?.message) {
 //           console.error(`❌ API returned error:`, response.data.error || response.data.message);
 //           console.error(`❌ Full error response:`, JSON.stringify(response.data, null, 2));
 //         }
-        
+
 //         const wallets = response.data?.data || [];
 //         const pagination = response.data?.pagination || {};
-        
+
 //         console.log(`📊 Extracted wallets: ${wallets.length}, Pagination:`, pagination);
-        
+
 //         allWallets.push(...wallets);
 //         totalPages = pagination.totalPages || 1;
-        
+
 //         console.log(`📄 Fetched page ${currentPage}/${totalPages}: ${wallets.length} wallets`);
 //         currentPage++;
-        
+
 //         // Small delay to avoid rate limiting
 //         if (currentPage <= totalPages) {
 //           await new Promise(resolve => setTimeout(resolve, 200));
@@ -15451,7 +15452,7 @@ function normalizePoolType(poolType) {
 //         const pairSymbol = wallet.poolMintASymbol && wallet.tokenSymbol 
 //           ? `${wallet.poolMintASymbol}/${wallet.tokenSymbol}` 
 //           : wallet.tokenSymbol || "";
-        
+
 //         const newWallet = await WalletSchema.create({
 //           walletAddress: wallet.address,
 //           innerWalletAddress: wallet.MWalletAddress, 
@@ -15531,12 +15532,12 @@ exports.walletAddDynamically = async (req, res) => {
               limit: limit
             },
             headers: {
-          "x-api-key": process.env.WALLET_GEN_API_KEY,
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-          "Accept": "application/json",
-          "Accept-Language": "en-US,en;q=0.9",
-          "Referer": "https://dexmmapi.stringonchain.io/",
-          "Origin": "https://dexmmapi.stringonchain.io"
+              "x-api-key": process.env.WALLET_GEN_API_KEY,
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+              "Accept": "application/json",
+              "Accept-Language": "en-US,en;q=0.9",
+              "Referer": "https://dexmmapi.stringonchain.io/",
+              "Origin": "https://dexmmapi.stringonchain.io"
             }
           }
         );
@@ -15753,7 +15754,7 @@ exports.walletAddDynamically = async (req, res) => {
 //     const dayStart = targetMoment.clone().set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
 //     // Set to end of day (23:59:59)
 //     const dayEnd = dayStart.clone().endOf("day");
-    
+
 //     const startTime = dayStart.format("YYYYMMDD"); // Target date in YYYYMMDD format
 //     const endTime = dayStart.clone().add(1, "days").format("YYYYMMDD"); // Next day
 
@@ -15961,7 +15962,7 @@ exports.walletAddDynamically = async (req, res) => {
 //     }
 
 //     // Build base report data
-    
+
 //     let reportData = {
 //       pairAddress,
 //       tokenAddress,
@@ -16054,7 +16055,7 @@ exports.walletAddDynamically = async (req, res) => {
 //     const dayStart = targetMoment.clone().set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
 //     // Set to end of day (23:59:59)
 //     const dayEnd = dayStart.clone().endOf("day");
-    
+
 //     const startTime = dayStart.format("YYYYMMDD"); // Target date in YYYYMMDD format
 //     const endTime = dayStart.clone().add(1, "days").format("YYYYMMDD"); // Next day
 
@@ -16262,7 +16263,7 @@ exports.walletAddDynamically = async (req, res) => {
 //     }
 
 //     // Build base report data
-    
+
 //     let reportData = {
 //       pairAddress,
 //       tokenAddress,
@@ -16323,24 +16324,24 @@ exports.walletAddDynamically = async (req, res) => {
 //         }
 //         throw new Error("Invalid date format. Use YYYYMMDD format");
 //       }
-      
+
 //       fromMoment = moment.utc(fromDate, "YYYYMMDD");
 //       toMoment = moment.utc(toDate, "YYYYMMDD");
-      
+
 //       if (!fromMoment.isValid() || !toMoment.isValid()) {
 //         if (res) {
 //           return res.status(400).json({ error: "Invalid dates provided" });
 //         }
 //         throw new Error("Invalid dates provided");
 //       }
-      
+
 //       if (fromMoment.isAfter(toMoment)) {
 //         if (res) {
 //           return res.status(400).json({ error: "fromDate must be before or equal to toDate" });
 //         }
 //         throw new Error("fromDate must be before or equal to toDate");
 //       }
-      
+
 //       console.log(`📅 Processing date range: ${fromDate} to ${toDate}`);
 //     } else {
 //       // Default to yesterday if no dates provided
@@ -16363,7 +16364,7 @@ exports.walletAddDynamically = async (req, res) => {
 //     for (let dateIndex = 0; dateIndex < datesToProcess.length; dateIndex++) {
 //       const targetDate = datesToProcess[dateIndex];
 //       const dateStr = targetDate.format("YYYYMMDD");
-      
+
 //       console.log(`\n${'='.repeat(60)}`);
 //       console.log(`📅 Processing date ${dateIndex + 1}/${datesToProcess.length}: ${dateStr}`);
 //       console.log(`${'='.repeat(60)}\n`);
@@ -16434,7 +16435,7 @@ exports.walletAddDynamically = async (req, res) => {
 //                 targetDate
 //               );
 //               console.log("skipping cpmm pool");
-              
+
 //             } else {
 //                 // 👇 await everything sequentially — prevents overlap
 //                 // await exports.getPoolTransactionsDefiCpmmDateWise(
@@ -16537,7 +16538,7 @@ exports.getPoolTransactionsDefiDateWiseTest = async (
     const dayStart = targetMoment.clone().set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
     // Set to end of day (23:59:59)
     const dayEnd = dayStart.clone().endOf("day");
-    
+
     const startTime = dayStart.format("YYYYMMDD"); // Target date in YYYYMMDD format
     const endTime = dayStart.clone().add(1, "days").format("YYYYMMDD"); // Next day
 
@@ -16562,7 +16563,7 @@ exports.getPoolTransactionsDefiDateWiseTest = async (
       method: "GET",
       headers: {
         token:
- process.env.SOL_API_TOKEN,
+          process.env.SOL_API_TOKEN,
       },
     };
 
@@ -16583,10 +16584,10 @@ exports.getPoolTransactionsDefiDateWiseTest = async (
     }
     const addressAverage = addressPriceData.data[0].price;
     console.log(startTime, "startTime");
-    
+
     console.log("addressAverage", addressAverage);
 
-    
+
     const responsePrice = await fetch(
       `https://pro-api.solscan.io/v2.0/token/price?address=${tokenAddress}&from_time=${startTime}&to_time=${startTime}`,
       requestOptions
@@ -16629,17 +16630,17 @@ exports.getPoolTransactionsDefiDateWiseTest = async (
       }
     }
 
- if (dayData.length === 0) {
+    if (dayData.length === 0) {
       console.log("🚫 No transactions found, skipping...");
       return;
       // return res.status(200).json({ message: "No transactions for this date" });
     }
 
-    const swapsTxs = dayData.filter(tx =>tx.activity_type === "ACTIVITY_TOKEN_SWAP");
+    const swapsTxs = dayData.filter(tx => tx.activity_type === "ACTIVITY_TOKEN_SWAP");
 
     console.log("swapsTxs", swapsTxs.length);
 
-     // Filter Buys and Sells
+    // Filter Buys and Sells
     const buyTxs = swapsTxs.filter((tx) => tx.routers?.token2 === tokenAddress);
     console.log("buyTxs", buyTxs.length);
     const sellTxs = swapsTxs.filter((tx) => tx.routers?.token1 === tokenAddress);
@@ -16663,45 +16664,45 @@ exports.getPoolTransactionsDefiDateWiseTest = async (
     const buysVolumee = buysVolumeInMintA * addressAverage;
     const sellsVolumee = sellsVolumeMintB * tokenAverage;
     const totalVolumeSwap = buysVolumee + sellsVolumee;
-    
-    const ACTIVITY_AGG_TOKEN_SWAP = dayData.filter((tx)=>tx.activity_type == "ACTIVITY_AGG_TOKEN_SWAP")
+
+    const ACTIVITY_AGG_TOKEN_SWAP = dayData.filter((tx) => tx.activity_type == "ACTIVITY_AGG_TOKEN_SWAP")
     console.log("ACTIVITY_AGG_TOKEN_SWAP", ACTIVITY_AGG_TOKEN_SWAP.length);
 
 
-    
+
     const clmmChildRouters = ACTIVITY_AGG_TOKEN_SWAP.flatMap((tx) =>
       (tx.routers?.child_routers || []).filter((cr) =>
-       ( cr.token1 === address || cr.token1 === tokenAddress) && ( cr.token2 === address || cr.token2 === tokenAddress)
-    
+        (cr.token1 === address || cr.token1 === tokenAddress) && (cr.token2 === address || cr.token2 === tokenAddress)
+
       )
     );
     console.log("clmmChildRouters", clmmChildRouters.length);
 
-     // Filter Buys and Sells
-     const buyTxsAGG = clmmChildRouters.filter((tx) => tx.token2 === tokenAddress);
-     const sellTxsAGG = clmmChildRouters.filter((tx) => tx.token1 === tokenAddress);
- 
- console.log("buyTxsAGG", buyTxsAGG.length);
- console.log("sellTxsAGG", sellTxsAGG.length);
+    // Filter Buys and Sells
+    const buyTxsAGG = clmmChildRouters.filter((tx) => tx.token2 === tokenAddress);
+    const sellTxsAGG = clmmChildRouters.filter((tx) => tx.token1 === tokenAddress);
 
- const buysVolumeInMintAAGG = buyTxsAGG.reduce(
-  (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
-  0
-);
-console.log("buysVolumeInMintAAGG", buysVolumeInMintAAGG);
-const sellsVolumeMintBAGG = sellTxsAGG.reduce(
-  (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
-  0
-);
-console.log("sellsVolumeMintBAGG", sellsVolumeMintBAGG);
-const buysVolumeAGG = buysVolumeInMintAAGG * addressAverage;
-console.log("buysVolumeAGG", buysVolumeAGG);
-const sellsVolumeAGG = sellsVolumeMintBAGG * tokenAverage;
-console.log("sellsVolumeAGG", sellsVolumeAGG);
-const totalVolumeAGG = buysVolumeAGG + sellsVolumeAGG;
+    console.log("buyTxsAGG", buyTxsAGG.length);
+    console.log("sellTxsAGG", sellTxsAGG.length);
 
-const totalVolume = totalVolumeSwap + totalVolumeAGG;
-console.log("totalVolume", totalVolume);
+    const buysVolumeInMintAAGG = buyTxsAGG.reduce(
+      (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
+      0
+    );
+    console.log("buysVolumeInMintAAGG", buysVolumeInMintAAGG);
+    const sellsVolumeMintBAGG = sellTxsAGG.reduce(
+      (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
+      0
+    );
+    console.log("sellsVolumeMintBAGG", sellsVolumeMintBAGG);
+    const buysVolumeAGG = buysVolumeInMintAAGG * addressAverage;
+    console.log("buysVolumeAGG", buysVolumeAGG);
+    const sellsVolumeAGG = sellsVolumeMintBAGG * tokenAverage;
+    console.log("sellsVolumeAGG", sellsVolumeAGG);
+    const totalVolumeAGG = buysVolumeAGG + sellsVolumeAGG;
+
+    const totalVolume = totalVolumeSwap + totalVolumeAGG;
+    console.log("totalVolume", totalVolume);
 
     const LPadded = totalVolume * lpPercentage * lpReward.lpRewardPool;
 
@@ -16711,7 +16712,7 @@ console.log("totalVolume", totalVolume);
     const response = await fetch(urll, {
       method: "GET",
       // headers: { token: process.env.SOL_API_TOKEN },
- });
+    });
     const data1 = await response.json();
     //   const lastReportDate= moment.utc().subtract(2, "days").format("YYYYMMDD")
     //  console.log("lastReportDate",lastReportDate);
@@ -16802,16 +16803,16 @@ console.log("totalVolume", totalVolume);
       address,
       name,
       chainId,
-      totalTransactions:dayData.length,
-      buys:buyTxs.length+buyTxsAGG.length,
-      sells:sellTxs.length+sellTxsAGG.length,
-      buysVolume:buysVolumeAGG + buysVolumee,
-      sellsVolume:sellsVolumeAGG+sellsVolumee,
+      totalTransactions: dayData.length,
+      buys: buyTxs.length + buyTxsAGG.length,
+      sells: sellTxs.length + sellTxsAGG.length,
+      buysVolume: buysVolumeAGG + buysVolumee,
+      sellsVolume: sellsVolumeAGG + sellsVolumee,
       totalVolume,
       poolLiquidity,
       companysLiquidity,
       usersLiquidity,
-      poolFee:totalVolume * lpPercentage,
+      poolFee: totalVolume * lpPercentage,
       poolRevenue,
       usersRevenue,
       companysRevenue,
@@ -16904,7 +16905,7 @@ exports.getPoolTransactionsDefiCpmmDateWiseTest = async (
     const dayStart = targetMoment.clone().set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
     // Set to end of day (23:59:59)
     const dayEnd = dayStart.clone().endOf("day");
-    
+
     const startTime = dayStart.format("YYYYMMDD"); // Target date in YYYYMMDD format
     const endTime = dayStart.clone().add(1, "days").format("YYYYMMDD"); // Next day
 
@@ -16929,7 +16930,7 @@ exports.getPoolTransactionsDefiCpmmDateWiseTest = async (
       method: "GET",
       headers: {
         token:
- process.env.SOL_API_TOKEN,
+          process.env.SOL_API_TOKEN,
       },
     };
 
@@ -16969,7 +16970,7 @@ exports.getPoolTransactionsDefiCpmmDateWiseTest = async (
       });
       const data = await response.json();
       // console.log("data",data);
-      
+
 
       if (data?.data && Array.isArray(data.data) && data.data.length > 0) {
         dayData = dayData.concat(data.data);
@@ -16980,7 +16981,7 @@ exports.getPoolTransactionsDefiCpmmDateWiseTest = async (
         hasMore = false;
       }
     }
-// console.log("dayData.length",dayData.length);
+    // console.log("dayData.length",dayData.length);
 
     if (dayData.length === 0) {
       console.log("🚫 No transactions found, skipping...");
@@ -16990,11 +16991,11 @@ exports.getPoolTransactionsDefiCpmmDateWiseTest = async (
 
 
 
-   const swapsTxs = dayData.filter(tx =>tx.activity_type === "ACTIVITY_TOKEN_SWAP");
+    const swapsTxs = dayData.filter(tx => tx.activity_type === "ACTIVITY_TOKEN_SWAP");
 
     console.log("swapsTxs", swapsTxs.length);
 
-     // Filter Buys and Sells
+    // Filter Buys and Sells
     const buyTxs = swapsTxs.filter((tx) => tx.routers?.token2 === tokenAddress);
     console.log("buyTxs", buyTxs.length);
     const sellTxs = swapsTxs.filter((tx) => tx.routers?.token1 === tokenAddress);
@@ -17021,45 +17022,45 @@ exports.getPoolTransactionsDefiCpmmDateWiseTest = async (
     const buysVolumee = buysVolumeInMintA * addressAverage;
     const sellsVolumee = sellsVolumeMintB * tokenAverage;
     const totalVolumeSwap = buysVolumee + sellsVolumee;
-    
-    const ACTIVITY_AGG_TOKEN_SWAP = dayData.filter((tx)=>tx.activity_type == "ACTIVITY_AGG_TOKEN_SWAP")
+
+    const ACTIVITY_AGG_TOKEN_SWAP = dayData.filter((tx) => tx.activity_type == "ACTIVITY_AGG_TOKEN_SWAP")
     console.log("ACTIVITY_AGG_TOKEN_SWAP", ACTIVITY_AGG_TOKEN_SWAP.length);
 
 
-    
+
     const clmmChildRouters = ACTIVITY_AGG_TOKEN_SWAP.flatMap((tx) =>
       (tx.routers?.child_routers || []).filter((cr) =>
-       ( cr.token1 === address || cr.token1 === tokenAddress) && ( cr.token2 === address || cr.token2 === tokenAddress)
-    
+        (cr.token1 === address || cr.token1 === tokenAddress) && (cr.token2 === address || cr.token2 === tokenAddress)
+
       )
     );
     console.log("clmmChildRouters", clmmChildRouters.length);
 
-     // Filter Buys and Sells
-     const buyTxsAGG = clmmChildRouters.filter((tx) => tx.token2 === tokenAddress);
-     const sellTxsAGG = clmmChildRouters.filter((tx) => tx.token1 === tokenAddress);
- 
- console.log("buyTxsAGG", buyTxsAGG.length);
- console.log("sellTxsAGG", sellTxsAGG.length);
+    // Filter Buys and Sells
+    const buyTxsAGG = clmmChildRouters.filter((tx) => tx.token2 === tokenAddress);
+    const sellTxsAGG = clmmChildRouters.filter((tx) => tx.token1 === tokenAddress);
 
- const buysVolumeInMintAAGG = buyTxsAGG.reduce(
-  (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
-  0
-);
-console.log("buysVolumeInMintAAGG", buysVolumeInMintAAGG);
-const sellsVolumeMintBAGG = sellTxsAGG.reduce(
-  (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
-  0
-);
-console.log("sellsVolumeMintBAGG", sellsVolumeMintBAGG);
-const buysVolumeAGG = buysVolumeInMintAAGG * addressAverage;
-console.log("buysVolumeAGG", buysVolumeAGG);
-const sellsVolumeAGG = sellsVolumeMintBAGG * tokenAverage;
-console.log("sellsVolumeAGG", sellsVolumeAGG);
-const totalVolumeAGG = buysVolumeAGG + sellsVolumeAGG;
+    console.log("buyTxsAGG", buyTxsAGG.length);
+    console.log("sellTxsAGG", sellTxsAGG.length);
 
-const totalVolume = totalVolumeSwap + totalVolumeAGG;
-console.log("totalVolume", totalVolume);
+    const buysVolumeInMintAAGG = buyTxsAGG.reduce(
+      (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
+      0
+    );
+    console.log("buysVolumeInMintAAGG", buysVolumeInMintAAGG);
+    const sellsVolumeMintBAGG = sellTxsAGG.reduce(
+      (sum, tx) => sum + Number(tx.amount1 / (10 ** tx.token1_decimals) ?? 0),
+      0
+    );
+    console.log("sellsVolumeMintBAGG", sellsVolumeMintBAGG);
+    const buysVolumeAGG = buysVolumeInMintAAGG * addressAverage;
+    console.log("buysVolumeAGG", buysVolumeAGG);
+    const sellsVolumeAGG = sellsVolumeMintBAGG * tokenAverage;
+    console.log("sellsVolumeAGG", sellsVolumeAGG);
+    const totalVolumeAGG = buysVolumeAGG + sellsVolumeAGG;
+
+    const totalVolume = totalVolumeSwap + totalVolumeAGG;
+    console.log("totalVolume", totalVolume);
 
     const LPadded = totalVolume * lpPercentage * lpReward.lpRewardPool;
 
@@ -17158,7 +17159,7 @@ console.log("totalVolume", totalVolume);
     }
 
     // Build base report data
-    
+
     let reportData = {
       pairAddress,
       tokenAddress,
@@ -17166,16 +17167,16 @@ console.log("totalVolume", totalVolume);
       address,
       name,
       chainId,
-      totalTransactions:dayData.length,
-      buys:buyTxs.length+buyTxsAGG.length,
-      sells:sellTxs.length+sellTxsAGG.length,
-      buysVolume:buysVolumeAGG + buysVolumee,
-      sellsVolume:sellsVolumeAGG+sellsVolumee,
+      totalTransactions: dayData.length,
+      buys: buyTxs.length + buyTxsAGG.length,
+      sells: sellTxs.length + sellTxsAGG.length,
+      buysVolume: buysVolumeAGG + buysVolumee,
+      sellsVolume: sellsVolumeAGG + sellsVolumee,
       totalVolume,
       poolLiquidity,
       companysLiquidity,
       usersLiquidity,
-      poolFee:totalVolume * lpPercentage,
+      poolFee: totalVolume * lpPercentage,
       poolRevenue,
       usersRevenue,
       companysRevenue,
@@ -17253,14 +17254,14 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
       const startTime = Number(date.format("YYYYMMDD"));
 
       for (const platform of platforms) {
-        const tokens = await TokenSchema.find({ platformId: platform._id,status:true });
+        const tokens = await TokenSchema.find({ platformId: platform._id, status: true });
 
         for (const token of tokens) {
           const pools = await RWASchema.find({
             tokenAddress: token.tokenAddress,
           });
-          console.log("pools",pools);
-          
+          console.log("pools", pools);
+
 
           for (const pool of pools) {
             const exists = await reportPool.findOne({
@@ -17272,7 +17273,7 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
 
             if (pool.poolType?.toLowerCase() === "cpmm") {
               // console.log("Calling cpmm");
-              
+
               await exports.getPoolTransactionsDefiCpmmDateWiseTest(
                 pool.pairAddress,
                 pool.tokenAddress,
@@ -17286,7 +17287,7 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
                 date
               );
             } else {
-                            // console.log("Calling clmm");
+              // console.log("Calling clmm");
 
               await exports.getPoolTransactionsDefiDateWiseTest(
                 pool.pairAddress,
@@ -17375,7 +17376,7 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
 //     const dayStart = targetMoment.clone().set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
 //     // Set to end of day (23:59:59)
 //     const dayEnd = dayStart.clone().endOf("day");
-    
+
 //     const startTime = dayStart.format("YYYYMMDD"); // Target date in YYYYMMDD format
 //     const endTime = dayStart.clone().add(1, "days").format("YYYYMMDD"); // Next day
 
@@ -17421,10 +17422,10 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
 //     }
 //     const addressAverage = addressPriceData.data[0].price;
 //     console.log(startTime, "startTime");
-    
+
 //     console.log("addressAverage", addressAverage);
 
-    
+
 //     const responsePrice = await fetch(
 //       `https://pro-api.solscan.io/v2.0/token/price?address=${tokenAddress}&from_time=${startTime}&to_time=${startTime}`,
 //       requestOptions
@@ -17503,16 +17504,16 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
 //     const buysVolumee = buysVolumeInMintA * addressAverage;
 //     const sellsVolumee = sellsVolumeMintB * tokenAverage;
 //     const totalVolumeSwap = buysVolumee + sellsVolumee;
-    
+
 //     const ACTIVITY_AGG_TOKEN_SWAP = dayData.filter((tx)=>tx.activity_type == "ACTIVITY_AGG_TOKEN_SWAP")
 //     console.log("ACTIVITY_AGG_TOKEN_SWAP", ACTIVITY_AGG_TOKEN_SWAP.length);
 
 
-    
+
 //     const clmmChildRouters = ACTIVITY_AGG_TOKEN_SWAP.flatMap((tx) =>
 //       (tx.routers?.child_routers || []).filter((cr) =>
 //        ( cr.token1 === address || cr.token1 === tokenAddress) && ( cr.token2 === address || cr.token2 === tokenAddress)
-    
+
 //       )
 //     );
 //     console.log("clmmChildRouters", clmmChildRouters.length);
@@ -17520,7 +17521,7 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
 //      // Filter Buys and Sells
 //      const buyTxsAGG = clmmChildRouters.filter((tx) => tx.token2 === tokenAddress);
 //      const sellTxsAGG = clmmChildRouters.filter((tx) => tx.token1 === tokenAddress);
- 
+
 //  console.log("buyTxsAGG", buyTxsAGG.length);
 //  console.log("sellTxsAGG", sellTxsAGG.length);
 
@@ -17743,7 +17744,7 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
 //     const dayStart = targetMoment.clone().set({ hour: 0, minute: 0, second: 0, millisecond: 0 });
 //     // Set to end of day (23:59:59)
 //     const dayEnd = dayStart.clone().endOf("day");
-    
+
 //     const startTime = dayStart.format("YYYYMMDD"); // Target date in YYYYMMDD format
 //     const endTime = dayStart.clone().add(1, "days").format("YYYYMMDD"); // Next day
 
@@ -17989,7 +17990,7 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
 //     }
 
 //     // Build base report data
-    
+
 //     let reportData = {
 //       pairAddress,
 //       tokenAddress,
@@ -18053,24 +18054,24 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
 //         }
 //         throw new Error("Invalid date format. Use YYYYMMDD format");
 //       }
-      
+
 //       fromMoment = moment.utc(fromDate, "YYYYMMDD");
 //       toMoment = moment.utc(toDate, "YYYYMMDD");
-      
+
 //       if (!fromMoment.isValid() || !toMoment.isValid()) {
 //         if (res) {
 //           return res.status(400).json({ error: "Invalid dates provided" });
 //         }
 //         throw new Error("Invalid dates provided");
 //       }
-      
+
 //       if (fromMoment.isAfter(toMoment)) {
 //         if (res) {
 //           return res.status(400).json({ error: "fromDate must be before or equal to toDate" });
 //         }
 //         throw new Error("fromDate must be before or equal to toDate");
 //       }
-      
+
 //       console.log(`📅 Processing date range: ${fromDate} to ${toDate}`);
 //     } else {
 //       // Default to yesterday if no dates provided
@@ -18120,11 +18121,11 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
 //     for (let dateIndex = 0; dateIndex < datesToProcess.length; dateIndex++) {
 //       const targetDate = datesToProcess[dateIndex];
 //       const dateStr = targetDate.format("YYYYMMDD");
-      
+
 //       // Update progress tracker
 //       rwaReportsProgress.currentDate = dateStr;
 //       rwaReportsProgress.lastUpdate = new Date();
-      
+
 //       console.log(`\n${'='.repeat(60)}`);
 //       console.log(`📅 Processing date ${dateIndex + 1}/${datesToProcess.length}: ${dateStr}`);
 //       console.log(`📊 Progress: ${dateIndex}/${datesToProcess.length} dates (${((dateIndex / datesToProcess.length) * 100).toFixed(2)}%)`);
@@ -18187,11 +18188,11 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
 //               lpPercentage,
 //               poolType,
 //             } = LiquidityPool;
-            
+
 //             poolsForDate++;
 //             processingStats.totalPools++;
 //             rwaReportsProgress.totalPools++;
-            
+
 //             try {
 //               // Check if report already exists for this date and pool
 //               const startTimeNumber = parseInt(targetDate.format("YYYYMMDD"), 10);
@@ -18288,7 +18289,7 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
 //         rwaReportsProgress.processedDates++;
 //         rwaReportsProgress.processedDatesList.push(dateStr);
 //         rwaReportsProgress.lastUpdate = new Date();
-        
+
 //         // Calculate estimated completion time
 //         if (rwaReportsProgress.processedDates > 0) {
 //           const elapsed = (new Date() - rwaReportsProgress.startTime) / 1000; // seconds
@@ -18297,7 +18298,7 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
 //           const estimatedSeconds = avgTimePerDate * remainingDates;
 //           rwaReportsProgress.estimatedCompletion = new Date(Date.now() + estimatedSeconds * 1000);
 //         }
-        
+
 //         console.log(`\n✅ Completed processing for date: ${dateStr} (${poolsProcessedForDate}/${poolsForDate} pools processed)\n`);
 //       } catch (dateError) {
 //         console.error(`❌ Error processing date ${dateStr}:`, dateError.message);
@@ -18314,7 +18315,7 @@ exports.getRwaReportsDateWiseLive = async (req, res) => {
 //         rwaReportsProgress.lastUpdate = new Date();
 //       }
 //     }
-    
+
 //     // Mark as completed
 //     rwaReportsProgress.isRunning = false;
 //     rwaReportsProgress.currentDate = null;
@@ -18389,7 +18390,7 @@ cron.schedule("01 00 * * *", async () => {
     await exports.getTokenData(null, null, null);
 
     console.log("🚀 Starting getDailyTokenReport...");
-    await exports.getDailyTokenReport(null, null, null); 
+    await exports.getDailyTokenReport(null, null, null);
 
     console.log("🚀 Starting getholderDailydata...");
     await exports.getholderDailydata(null, null, null);
